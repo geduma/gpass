@@ -45,7 +45,9 @@ export default function EntryList({ entries, searchQuery, onSearchChange, securi
                   {entry.compromised ? 'Compromised' : 'Weak'}
                 </span>
               )}
-              <span className="entry-item-date">{entry.updated}</span>
+              <span className="entry-item-date">
+                {entry.updatedAt ? entry.updatedAt.split('T')[0] || entry.updatedAt : ''}
+              </span>
             </div>
           </button>
         ))}

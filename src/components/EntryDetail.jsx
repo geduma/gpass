@@ -129,7 +129,9 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
                 <span className={`strength-badge ${entry.strength}`}>
                   {entry.strength === 'strong' ? 'Strong' : entry.strength}
                 </span>
-                <span className="detail-date">Updated: {entry.updated}</span>
+                <span className="detail-date">
+                  Updated: {entry.updatedAt ? entry.updatedAt.split('T')[0] || entry.updatedAt : ''}
+                </span>
               </div>
             </>
           ) : (
@@ -180,11 +182,12 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
                 >
                   <option value="strong">Strong</option>
                   <option value="weak">Weak</option>
+                  <option value="compromised">Compromised</option>
                 </select>
               </div>
 
               {isNew && (
-                <p className="detail-hint">The slug and dates will be generated automatically.</p>
+                <p className="detail-hint">The dates will be generated server-side.</p>
               )}
             </>
           )}

@@ -1,105 +1,145 @@
-import { describe, it, expect, beforeAll } from 'vitest'
-import { sha256 } from '../src/utils/hash'
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
 
 let api
-let owner
 const email = 'test@example.com'
+const ownerHash = '2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c'
+const entryId = '665f1a2b3c4d5e6f7a8b9c0d'
+
+function fetchMockFactory(responses) {
+  let callCount = 0
+  return vi.fn().mockImplementation(() => {
+    const idx = Math.min(callCount, responses.length - 1)
+    const resp = responses[idx]
+    callCount++
+    const r = { status: resp.status }
+    if (resp.json !== undefined) {
+      r.json = () => Promise.resolve(resp.json)
+    }
+    return Promise.resolve(r)
+  })
+}
 
 beforeAll(async () => {
-  owner = await sha256(email)
   api = await import('../src/utils/api')
 })
 
-describe('api (mock)', () => {
-  it('creates and fetches entries', async () => {
-    const created = await api.createEntry({
+beforeEach(() => {
+  vi.restoreAllMocks()
+})
+
+describe('api', () => {
+  it('createEntry encrypts password and sends POST', async () => {
+    const mock = fetchMockFactory([
+      { status: 200, json: { ok: true, data: { token: 'jwt' } } },
+      { status: 201, json: { ok: true, data: { id: entryId } } }
+    ])
+    vi.stubGlobal('fetch', mock)
+
+    const result = await api.createEntry({
       title: 'GitHub',
       username: 'test@example.com',
       password: 'secret123',
       strength: 'strong',
-      owner
+      owner: ownerHash
     }, email)
 
-    expect(created.title).toBe('GitHub')
-    expect(created.username).toBe('test@example.com')
-    expect(created.password).toBe('secret123')
-    expect(created.encrypted).toBe(true)
-    expect(created.iv).toBeTruthy()
-    expect(created._id).toBeTruthy()
+    expect(result._id).toBe(entryId)
+    expect(result.title).toBe('GitHub')
+    expect(result.password).toBe('secret123')
 
-    const entries = await api.fetchEntries(owner, '', false, email)
-    const match = entries.find(e => e._id === created._id)
-    expect(match).toBeTruthy()
-    expect(match.password).toBe('secret123')
+    const postCall = mock.mock.calls[1]
+    expect(postCall[0]).toBe('https://api.geduma.com/gpass')
+    expect(postCall[1].method).toBe('POST')
+    const sentBody = JSON.parse(postCall[1].body)
+    expect(sentBody.title).toBe('GitHub')
+    expect(sentBody.encrypted).toBe("true")
+    expect(sentBody.iv).toBeTruthy()
+    expect(sentBody.password).not.toBe('secret123')
   })
 
-  it('searches entries by query', async () => {
-    await api.createEntry({
-      title: 'Example',
-      username: 'admin@example.com',
-      password: 'pass456',
-      strength: 'weak',
-      owner
-    }, email)
+  it('fetchEntries sends GET with query params', async () => {
+    const mock = fetchMockFactory([
+      { status: 200, json: { ok: true, data: { token: 'jwt' } } },
+      { status: 200, json: { ok: true, data: [] } }
+    ])
+    vi.stubGlobal('fetch', mock)
 
-    const result = await api.fetchEntries(owner, 'Example', false, email)
-    expect(result.length).toBeGreaterThanOrEqual(1)
-    expect(result.some(e => e.title === 'Example')).toBe(true)
+    const result = await api.fetchEntries(ownerHash, 'test', true, email)
+
+    const getCall = mock.mock.calls[1]
+    expect(getCall[0]).toContain('owner=')
+    expect(getCall[0]).toContain('q=test')
+    expect(getCall[0]).toContain('security=true')
+    expect(getCall[1].headers.Authorization).toBe('Bearer jwt')
+    expect(result).toEqual([])
   })
 
-  it('filters by security', async () => {
-    const result = await api.fetchEntries(owner, '', true, email)
-    for (const entry of result) {
-      expect(entry.strength === 'weak' || entry.compromised).toBe(true)
-    }
+  it('fetchEntries returns empty array on 204', async () => {
+    const mock = fetchMockFactory([
+      { status: 200, json: { ok: true, data: { token: 'jwt' } } },
+      { status: 204, json: undefined }
+    ])
+    vi.stubGlobal('fetch', mock)
+
+    const result = await api.fetchEntries(ownerHash, '', false, email)
+    expect(result).toEqual([])
   })
 
-  it('gets a single entry by id', async () => {
-    const created = await api.createEntry({
-      title: 'Single',
-      username: 'single@test.com',
-      password: 'singlepass',
-      strength: 'strong',
-      owner
-    }, email)
+  it('getEntry fetches single entry by id', async () => {
+    const mock = fetchMockFactory([
+      { status: 200, json: { ok: true, data: { token: 'jwt' } } },
+      { status: 200, json: {
+        ok: true,
+        data: {
+          _id: entryId, title: 'Test', username: 'user',
+          password: 'plain-pass', strength: 'strong',
+          compromised: false, encrypted: false, iv: '',
+          owner: ownerHash, createdAt: '2026-06-23', updatedAt: '2026-06-23'
+        }
+      }}
+    ])
+    vi.stubGlobal('fetch', mock)
 
-    const fetched = await api.getEntry(created._id, owner, email)
-    expect(fetched.title).toBe('Single')
-    expect(fetched.password).toBe('singlepass')
+    const result = await api.getEntry(entryId, ownerHash, email)
+    expect(result._id).toBe(entryId)
+    expect(result.title).toBe('Test')
   })
 
-  it('updates an entry', async () => {
-    const created = await api.createEntry({
-      title: 'UpdateMe',
-      username: 'update@test.com',
-      password: 'oldpass',
-      strength: 'weak',
-      owner
-    }, email)
+  it('updateEntry sends PUT with correct url', async () => {
+    const mock = fetchMockFactory([
+      { status: 200, json: { ok: true, data: { token: 'jwt' } } },
+      { status: 200, json: {
+        ok: true,
+        data: {
+          _id: entryId, title: 'Updated', username: 'user',
+          password: 'plain-text', strength: 'strong',
+          compromised: false, encrypted: false, iv: '',
+          owner: ownerHash, createdAt: '2026-06-23', updatedAt: '2026-06-23'
+        }
+      }}
+    ])
+    vi.stubGlobal('fetch', mock)
 
-    const updated = await api.updateEntry(created._id, {
-      title: 'Updated',
-      password: 'newpass',
-      strength: 'strong'
-    }, email)
+    await api.updateEntry(entryId, { title: 'Updated', strength: 'strong' }, email)
 
-    expect(updated.title).toBe('Updated')
-    expect(updated.password).toBe('newpass')
-    expect(updated.strength).toBe('strong')
+    const putCall = mock.mock.calls[1]
+    expect(putCall[0]).toBe(`https://api.geduma.com/gpass/${entryId}`)
+    expect(putCall[1].method).toBe('PUT')
   })
 
-  it('deletes an entry', async () => {
-    const created = await api.createEntry({
-      title: 'DeleteMe',
-      username: 'delete@test.com',
-      password: 'delpass',
-      strength: 'strong',
-      owner
-    }, email)
+  it('deleteEntry sends DELETE with owner in body', async () => {
+    const mock = fetchMockFactory([
+      { status: 200, json: { ok: true, data: { token: 'jwt' } } },
+      { status: 204, json: undefined }
+    ])
+    vi.stubGlobal('fetch', mock)
 
-    await api.deleteEntry(created._id, owner)
-    const entries = await api.fetchEntries(owner, '', false, email)
-    const found = entries.find(e => e._id === created._id)
-    expect(found).toBeUndefined()
+    await api.deleteEntry(entryId, ownerHash)
+
+    const deleteCall = mock.mock.calls[1]
+    expect(deleteCall[0]).toBe(`https://api.geduma.com/gpass/${entryId}`)
+    expect(deleteCall[1].method).toBe('DELETE')
+    const sentBody = JSON.parse(deleteCall[1].body)
+    expect(sentBody.owner).toBe(ownerHash)
   })
 })

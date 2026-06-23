@@ -11,8 +11,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     env: {
-      VITE_USE_MOCK: 'true',
-      VITE_API_AUTH_KEY: 'test-key',
+      VITE_API_AUTH_KEY: 'test-key-for-testing',
       VITE_APP_ID: 'app_gpass_test'
     }
   }
