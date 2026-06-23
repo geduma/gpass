@@ -668,6 +668,102 @@ input:read-only:focus {
 
 
 
+/* ─── Tags ─── */
+
+.tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(58, 58, 58, 0.8);
+  color: rgba(234, 234, 234, 0.9);
+  border: 1px solid rgba(80, 80, 80, 0.6);
+}
+
+.tag-chip-removable {
+  padding-right: 2px;
+}
+
+.tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 2px;
+  border-radius: 50%;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.tag-remove:hover {
+  color: var(--danger);
+  background: rgba(255, 69, 58, 0.15);
+}
+
+.tag-input {
+  margin-top: 4px;
+  margin-bottom: 8px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(42, 42, 42, 0.4);
+  border-radius: 0;
+  padding: 4px 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.tag-input::placeholder {
+  color: rgba(139, 139, 139, 0.4);
+}
+
+.tag-input:focus {
+  border-bottom-color: var(--text-secondary);
+}
+
+/* ─── Entry List Tags ─── */
+
+.entry-item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.entry-item-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(42, 42, 42, 0.4);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  line-height: 1.4;
+}
+
+.entry-item-tags-more {
+  font-size: 10px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
 /* ─── Responsive ─── */
 
 @media (max-width: 768px) {
