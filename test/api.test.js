@@ -106,7 +106,7 @@ describe('api', () => {
     expect(putCall[1].method).toBe('PUT')
   })
 
-  it('deleteEntry sends DELETE with owner in body', async () => {
+  it('deleteEntry sends DELETE with owner as query param', async () => {
     const mock = fetchMockFactory([
       { status: 200, json: { ok: true, data: { token: 'jwt' } } },
       { status: 204, json: undefined }
@@ -116,9 +116,8 @@ describe('api', () => {
     await api.deleteEntry(entryId, ownerHash)
 
     const deleteCall = mock.mock.calls[1]
-    expect(deleteCall[0]).toBe(`https://api.geduma.com/gpass/${entryId}`)
+    expect(deleteCall[0]).toBe(`https://api.geduma.com/gpass/${entryId}?owner=${ownerHash}`)
     expect(deleteCall[1].method).toBe('DELETE')
-    const sentBody = JSON.parse(deleteCall[1].body)
-    expect(sentBody.owner).toBe(ownerHash)
+    expect(deleteCall[1].body).toBeUndefined()
   })
 })

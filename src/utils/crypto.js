@@ -1,4 +1,4 @@
-const SALT = 'gpass-cipher-v1'
+const SALT = 'gpass-cipher-v2'
 const ITERATIONS = 100000
 const KEY_LENGTH = 256
 const IV_LENGTH = 12

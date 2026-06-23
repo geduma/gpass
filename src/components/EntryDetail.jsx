@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const LOWERCASE = 'abcdefghijklmnopqrstuvwxyz'
 const UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -7,12 +7,18 @@ const SYMBOLS = '!@#$%^&*()_+-=[]{}|;:,.<>?'
 
 function generatePassword() {
   const pool = UPPERCASE + LOWERCASE + NUMBERS + SYMBOLS
+  const poolLen = pool.length
+  const maxValid = 256 - (256 % poolLen)
   const length = 16
   let password = ''
-  const bytes = new Uint8Array(length)
-  crypto.getRandomValues(bytes)
-  for (let i = 0; i < length; i++) {
-    password += pool[bytes[i] % pool.length]
+  while (password.length < length) {
+    const bytes = new Uint8Array(length)
+    crypto.getRandomValues(bytes)
+    for (let i = 0; i < length && password.length < length; i++) {
+      if (bytes[i] < maxValid) {
+        password += pool[bytes[i] % poolLen]
+      }
+    }
   }
   return password
 }
@@ -39,9 +45,11 @@ function strengthLabel(s) {
 export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
   const [mode, setMode] = useState('view')
   const [showPassword, setShowPassword] = useState(false)
+  const showTimerRef = useRef(null)
   const [form, setForm] = useState({})
   const [copied, setCopied] = useState(null)
   const [tagInput, setTagInput] = useState('')
+  const [clearTimer, setClearTimer] = useState(null)
 
   useEffect(() => {
     if (entry) {
@@ -58,7 +66,14 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
     }
   }, [entry])
 
-  if (!entry) return null
+  useEffect(() => {
+    if (showPassword) {
+      showTimerRef.current = setTimeout(() => setShowPassword(false), 10000)
+    }
+    return () => {
+      if (showTimerRef.current) clearTimeout(showTimerRef.current)
+    }
+  }, [showPassword])
 
   function handleEdit() {
     setForm({
@@ -97,6 +112,14 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
       await navigator.clipboard.writeText(text)
       setCopied(field)
       setTimeout(() => setCopied(null), 1500)
+
+      if (clearTimer) clearTimeout(clearTimer)
+      const timer = setTimeout(async () => {
+        try {
+          await navigator.clipboard.writeText('')
+        } catch {}
+      }, 30000)
+      setClearTimer(timer)
     } catch {}
   }
 
@@ -105,7 +128,7 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
   }
 
   function addTag(value) {
-    const trimmed = value.trim()
+    const trimmed = value.trim().slice(0, 50)
     if (!trimmed) return
     setForm(prev => ({
       ...prev,
@@ -127,6 +150,8 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
       addTag(e.target.value)
     }
   }
+
+  if (!entry) return null
 
   const isNew = !entry._id
 
@@ -216,6 +241,7 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
                   type="text"
                   value={form.title}
                   onChange={e => handleFieldChange('title', e.target.value)}
+                  maxLength={100}
                 />
               </div>
 
@@ -235,6 +261,7 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
                   onChange={e => setTagInput(e.target.value)}
                   onKeyDown={handleTagKeyDown}
                   placeholder="Add tag..."
+                  maxLength={30}
                 />
               </div>
 
@@ -244,6 +271,7 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
                   type="text"
                   value={form.username}
                   onChange={e => handleFieldChange('username', e.target.value)}
+                  maxLength={100}
                 />
               </div>
 
