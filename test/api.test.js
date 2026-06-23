@@ -84,26 +84,6 @@ describe('api', () => {
     expect(result).toEqual([])
   })
 
-  it('getEntry fetches single entry by id', async () => {
-    const mock = fetchMockFactory([
-      { status: 200, json: { ok: true, data: { token: 'jwt' } } },
-      { status: 200, json: {
-        ok: true,
-        data: {
-          _id: entryId, title: 'Test', username: 'user',
-          password: 'plain-pass', strength: 'strong',
-          encrypted: false, iv: '',
-          owner: ownerHash, createdAt: '2026-06-23', updatedAt: '2026-06-23'
-        }
-      }}
-    ])
-    vi.stubGlobal('fetch', mock)
-
-    const result = await api.getEntry(entryId, ownerHash, email)
-    expect(result._id).toBe(entryId)
-    expect(result.title).toBe('Test')
-  })
-
   it('updateEntry sends PUT with correct url', async () => {
     const mock = fetchMockFactory([
       { status: 200, json: { ok: true, data: { token: 'jwt' } } },

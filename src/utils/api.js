@@ -57,16 +57,6 @@ export async function fetchEntries(owner, query, email) {
   return decrypted.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
 }
 
-export async function getEntry(id, owner, email) {
-  const token = await getToken()
-  const res = await fetch(`${CRUD_BASE}/${id}?owner=${owner}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-  const json = await res.json()
-  if (!json.ok) throw new Error(json.msg || 'Failed to fetch entry')
-  return decryptEntry(json.data, email)
-}
-
 export async function createEntry({ title, username, password, strength, owner }, email) {
   const { ciphertext, iv } = await encryptField(password, email)
   const now = new Date().toISOString()

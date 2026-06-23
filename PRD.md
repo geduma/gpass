@@ -47,16 +47,15 @@
   "username": "felipe@geduma.com",
   "password": "ciphertext-base64",
   "strength": "strong",
-  "compromised": false,
   "encrypted": true,
   "iv": "iv-base64",
   "updated": "2026-06-22",
   "created": "2026-01-01",
   "owner": "sha256-email"
-}
-```
+ }
+ ```
 
-**Campos en texto plano**: `title`, `username`, `strength`, `compromised`, `updated`, `created`, `owner`
+ **Campos en texto plano**: `title`, `username`, `strength`, `updated`, `created`, `owner`
 
 **Campos cifrados** (AES-GCM 256 con clave derivada del email):
 - `password` — la contraseña
@@ -73,7 +72,7 @@
 
 | Método | Ruta | Auth | Body/Params | Descripción |
 |--------|------|------|-------------|-------------|
-| GET | `/gpass` | Bearer | `owner` (req), `q` (opc), `security` (opc) | Lista entradas |
+| GET | `/gpass` | Bearer | `owner` (req), `q` (opc) | Lista entradas |
 | GET | `/gpass/:id` | Bearer | `owner` (req) | Una entrada por `_id` |
 | POST | `/gpass` | Bearer | `{ title, username, password, strength, encrypted, iv, owner }` | Crear entrada |
 | PUT | `/gpass/:id` | Bearer | `{ title?, username?, password?, strength?, encrypted, iv, owner }` | Actualizar |
@@ -83,7 +82,6 @@
 - El servidor NO inspecciona `password`, `encrypted` ni `iv`. Es almacenamiento ciego.
 - Index en `owner` para queries eficientes.
 - Búsqueda textual sobre `title` y `username` (texto plano).
-- El flag `security=true` filtra por `strength=weak` o `compromised=true`.
 
 ---
 
@@ -95,7 +93,7 @@ La lista de entradas es la vista principal (una sola columna). Al hacer clic en 
 
 ```
 ┌──────────────────────────────────────────────────┐
-│ 🔍 [Search...]    [+]  [🛡️ Alerts (N)]          │
+│ 🔍 [Search...]    [+]                             │
 ├──────────────────────────────────────────────────┤
 │                                                  │
 │  ┌──────────────────────────────────────────────┐│
@@ -122,7 +120,6 @@ La lista de entradas es la vista principal (una sola columna). Al hacer clic en 
 ### Mobile (<768px)
 
 Misma estructura, pero:
-- Search bar colapsable (icono de lupa)
 - Al hacer clic en entrada, el detalle ocupa pantalla completa
 - Botón ← (back) en lugar de ✕ (close)
 - Avatar + logout en header o menú hamburguesa
@@ -137,10 +134,10 @@ Misma estructura, pero:
 App.jsx
 ├── Spinner.jsx                  ← overlay de carga
 ├── LoginModal.jsx               ← selección de provider OAuth
-├── EntryList.jsx                ← lista + search + filters + user info
+├── EntryList.jsx                ← lista + search + user info
 │   └── (entradas renderizadas inline)
 ├── EntryDetail.jsx              ← vista/edición, overlay sobre la lista
-│   └── PasswordGenerator.jsx    ← modal generador de contraseñas
+│   └── (generación inline con crypto.getRandomValues)
 └── ConfirmModal.jsx             ← confirmación para delete
 ```
 
@@ -152,7 +149,6 @@ user: User | null
 entries: Entry[]
 activeEntry: Entry | null
 searchQuery: string
-securityFilter: boolean
 loading: boolean
 ```
 
