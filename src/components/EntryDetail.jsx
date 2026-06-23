@@ -203,7 +203,7 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
                 {!isNew && (
                   <button className="btn btn-secondary" onClick={handleEdit}>Edit</button>
                 )}
-                <button className="btn btn-save" onClick={onClose}>Close</button>
+                <button className="btn btn-secondary" onClick={onClose}>Close</button>
               </div>
             </>
           ) : (
@@ -274,7 +274,7 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
               {mode === 'edit' && (
                 <div className="detail-footer">
                   <button className="btn btn-cancel" onClick={handleCancel}>Cancel</button>
-                  <button className="btn btn-save" onClick={handleSave}>Save</button>
+                  <button className="btn btn-secondary" onClick={handleSave}>Save</button>
                 </div>
               )}
             </>
