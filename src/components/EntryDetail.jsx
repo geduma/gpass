@@ -197,13 +197,15 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
               </div>
 
               <div className="detail-footer">
-                {!isNew && (
-                  <button className="btn btn-danger" onClick={handleDelete}>Delete</button>
-                )}
-                {!isNew && (
-                  <button className="btn btn-secondary" onClick={handleEdit}>Edit</button>
-                )}
-                <button className="btn btn-save" onClick={onClose}>Close</button>
+                <div className="detail-footer-left">
+                  {!isNew && (
+                    <button className="btn btn-danger" onClick={handleDelete}>Delete</button>
+                  )}
+                  {!isNew && (
+                    <button className="btn btn-secondary" onClick={handleEdit}>Edit</button>
+                  )}
+                </div>
+                <button className="btn btn-secondary detail-footer-close" onClick={onClose}>Close</button>
               </div>
             </>
           ) : (
@@ -273,8 +275,10 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
 
               {mode === 'edit' && (
                 <div className="detail-footer">
-                  <button className="btn btn-cancel" onClick={handleCancel}>Cancel</button>
-                  <button className="btn btn-save" onClick={handleSave}>Save</button>
+                  <div className="detail-footer-left">
+                    <button className="btn btn-cancel" onClick={handleCancel}>Cancel</button>
+                  </div>
+                  <button className="btn btn-secondary detail-footer-close" onClick={handleSave}>Save</button>
                 </div>
               )}
             </>
