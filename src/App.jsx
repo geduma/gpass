@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from './hooks/useAuth'
-import { useSecurityAlerts } from './hooks/useSecurityAlerts'
 import { fetchEntries, createEntry, updateEntry, deleteEntry } from './utils/api'
 import EntryList from './components/EntryList'
 import EntryDetail from './components/EntryDetail'
@@ -17,8 +16,6 @@ export default function App() {
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [showNewEntry, setShowNewEntry] = useState(false)
 
-  const { alertCount, isFilterActive, filteredEntries, toggleFilter } = useSecurityAlerts(entries)
-
   const loadEntries = useCallback(async () => {
     if (!user) return
     setLoading(true)
@@ -26,7 +23,6 @@ export default function App() {
       const data = await fetchEntries(
         user.ownerHash,
         searchQuery,
-        isFilterActive,
         user.email
       )
       setEntries(data)
@@ -35,7 +31,7 @@ export default function App() {
     } finally {
       setLoading(false)
     }
-  }, [user, searchQuery, isFilterActive])
+  }, [user, searchQuery])
 
   useEffect(() => {
     loadEntries()
@@ -133,12 +129,9 @@ export default function App() {
       {loading && <Spinner />}
 
       <EntryList
-        entries={filteredEntries}
+        entries={entries}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
-        securityFilter={isFilterActive}
-        onSecurityToggle={toggleFilter}
-        alertCount={alertCount}
         activeEntryId={activeEntry?._id}
         onSelectEntry={handleSelectEntry}
         user={user}
@@ -157,7 +150,7 @@ export default function App() {
 
       {confirmDelete && (
         <ConfirmModal
-          message="¿Eliminar entrada? Esto no se puede deshacer."
+          message="Delete entry? This cannot be undone."
           onConfirm={handleDeleteConfirm}
           onCancel={() => setConfirmDelete(null)}
         />

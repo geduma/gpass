@@ -1,6 +1,6 @@
 # gpass — Especificación Backend para geduma-api
 
-> Crear el módulo `gpass` en `geduma-api` siguiendo el mismo patrón que `gnotes`.
+> Especificación para crear el módulo `gpass` en `geduma-api`.
 
 ---
 

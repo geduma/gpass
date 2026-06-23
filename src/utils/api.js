@@ -26,7 +26,6 @@ function normalizeEntry(entry, plainPassword) {
     username: entry.username || '',
     password: plainPassword || '',
     strength: entry.strength,
-    compromised: !!entry.compromised,
     encrypted: entry.encrypted,
     iv: entry.iv,
     owner: entry.owner,
@@ -42,18 +41,17 @@ async function decryptEntry(entry, email) {
   return normalizeEntry(entry, plain)
 }
 
-export async function fetchEntries(owner, query, securityOnly, email) {
+export async function fetchEntries(owner, query, email) {
   const token = await getToken()
   const params = new URLSearchParams({ owner })
   if (query) params.set('q', query)
-  if (securityOnly) params.set('security', 'true')
 
   const res = await fetch(`${CRUD_BASE}?${params}`, {
     headers: { Authorization: `Bearer ${token}` }
   })
   if (res.status === 204) return []
   const json = await res.json()
-  if (!json.ok) throw new Error(json.msg || 'Error al obtener entradas')
+  if (!json.ok) throw new Error(json.msg || 'Failed to fetch entries')
 
   const decrypted = await Promise.all(json.data.map(e => decryptEntry(e, email)))
   return decrypted.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
@@ -65,7 +63,7 @@ export async function getEntry(id, owner, email) {
     headers: { Authorization: `Bearer ${token}` }
   })
   const json = await res.json()
-  if (!json.ok) throw new Error(json.msg || 'Error al obtener entrada')
+  if (!json.ok) throw new Error(json.msg || 'Failed to fetch entry')
   return decryptEntry(json.data, email)
 }
 
@@ -92,7 +90,7 @@ export async function createEntry({ title, username, password, strength, owner }
     body: JSON.stringify(body)
   })
   const json = await res.json()
-  if (!json.ok) throw new Error(json.msg || 'Error al crear entrada')
+  if (!json.ok) throw new Error(json.msg || 'Failed to create entry')
 
   return {
     _id: json.data.id,
@@ -100,7 +98,6 @@ export async function createEntry({ title, username, password, strength, owner }
     username: username || '',
     password,
     strength: strength || 'strong',
-    compromised: false,
     encrypted: "true",
     iv,
     owner,
@@ -129,7 +126,7 @@ export async function updateEntry(id, fields, email) {
     body: JSON.stringify(body)
   })
   const json = await res.json()
-  if (!json.ok) throw new Error(json.msg || 'Error al actualizar entrada')
+  if (!json.ok) throw new Error(json.msg || 'Failed to update entry')
 
   return decryptEntry(json.data, email)
 }
@@ -146,5 +143,5 @@ export async function deleteEntry(id, owner) {
   })
   if (res.status === 204) return
   const json = await res.json()
-  if (!json.ok) throw new Error(json.msg || 'Error al eliminar entrada')
+  if (!json.ok) throw new Error(json.msg || 'Failed to delete entry')
 }

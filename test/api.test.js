@@ -64,12 +64,11 @@ describe('api', () => {
     ])
     vi.stubGlobal('fetch', mock)
 
-    const result = await api.fetchEntries(ownerHash, 'test', true, email)
+    const result = await api.fetchEntries(ownerHash, 'test', email)
 
     const getCall = mock.mock.calls[1]
     expect(getCall[0]).toContain('owner=')
     expect(getCall[0]).toContain('q=test')
-    expect(getCall[0]).toContain('security=true')
     expect(getCall[1].headers.Authorization).toBe('Bearer jwt')
     expect(result).toEqual([])
   })
@@ -81,7 +80,7 @@ describe('api', () => {
     ])
     vi.stubGlobal('fetch', mock)
 
-    const result = await api.fetchEntries(ownerHash, '', false, email)
+    const result = await api.fetchEntries(ownerHash, '', email)
     expect(result).toEqual([])
   })
 
@@ -93,7 +92,7 @@ describe('api', () => {
         data: {
           _id: entryId, title: 'Test', username: 'user',
           password: 'plain-pass', strength: 'strong',
-          compromised: false, encrypted: false, iv: '',
+          encrypted: false, iv: '',
           owner: ownerHash, createdAt: '2026-06-23', updatedAt: '2026-06-23'
         }
       }}
@@ -113,7 +112,7 @@ describe('api', () => {
         data: {
           _id: entryId, title: 'Updated', username: 'user',
           password: 'plain-text', strength: 'strong',
-          compromised: false, encrypted: false, iv: '',
+          encrypted: false, iv: '',
           owner: ownerHash, createdAt: '2026-06-23', updatedAt: '2026-06-23'
         }
       }}

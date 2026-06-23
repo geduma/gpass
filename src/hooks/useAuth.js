@@ -8,7 +8,7 @@ const STORAGE_KEY = 'gpass_user'
 export async function fetchProviders(appId) {
   const res = await fetch(`${AUTH_API}/providers/${appId}`)
   const json = await res.json()
-  if (!json.ok) throw new Error(json.msg || 'Error al obtener providers')
+  if (!json.ok) throw new Error(json.msg || 'Failed to get providers')
   return json.data
 }
 
@@ -17,7 +17,7 @@ export async function startLogin(appId, providerId) {
     method: 'POST'
   })
   const json = await res.json()
-  if (!json.ok) throw new Error(json.msg || 'Error al iniciar login')
+  if (!json.ok) throw new Error(json.msg || 'Failed to start login')
   window.location.href = json.data.redirect
 }
 

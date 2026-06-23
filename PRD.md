@@ -526,8 +526,8 @@ describe('hash.js')
 ## 12. Variables de Entorno
 
 ```env
-VITE_API_AUTH_KEY=9d3c82ec3e3f7ddbc92e9a866dd4a6ae6b095d65
-VITE_APP_ID=app_gpass_8k3m9p2w1v6n
+VITE_API_AUTH_KEY=<your-api-key>
+VITE_APP_ID=<your-app-id>
 ```
 
 - `VITE_API_AUTH_KEY`: misma que el resto de apps geduma

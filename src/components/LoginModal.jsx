@@ -27,25 +27,26 @@ export default function LoginModal() {
   return (
     <div className="modal-overlay">
       <div className="modal-content login-modal">
-        <h2>Iniciar sesión</h2>
-        <p className="login-subtitle">Elige un proveedor para continuar</p>
+        <h2>Sign In</h2>
+        <p className="login-subtitle">Choose a provider to continue</p>
 
-        {loading && <p className="login-loading">Cargando proveedores...</p>}
+        {loading && <p className="login-loading">Loading providers...</p>}
 
         {error && <p className="login-error">{error}</p>}
 
         {!loading && !error && providers.length === 0 && (
-          <p className="login-error">No hay proveedores disponibles</p>
+          <p className="login-error">No providers available</p>
         )}
 
         <div className="login-providers">
           {providers.map(p => (
             <button
-              key={p.id}
+              key={p.providerId}
               className="login-provider-btn"
-              onClick={() => handleLogin(p.id)}
+              onClick={() => handleLogin(p.providerId)}
             >
-              {p.name}
+              {p.icon && <img src={p.icon} alt="" className="provider-icon" />}
+              {p.displayName || p.name}
             </button>
           ))}
         </div>

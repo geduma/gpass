@@ -109,6 +109,19 @@ input:focus, select:focus {
 .btn-primary {
   background: var(--brand);
   color: #fff;
+  border: 1px solid transparent;
+}
+
+.btn-save {
+  background: var(--surface);
+  border: 1px solid var(--success);
+  color: var(--success);
+}
+
+.btn-cancel {
+  background: var(--surface);
+  border: 1px solid var(--danger);
+  color: var(--danger);
 }
 
 .btn-secondary {
@@ -228,17 +241,50 @@ input:focus, select:focus {
 }
 
 .login-provider-btn {
-  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 15px;
+  font-size: 14px;
   transition: border-color 0.15s;
+  width: 100%;
+}
+
+.provider-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: #fff;
+  padding: 2px;
+  flex-shrink: 0;
 }
 
 .login-provider-btn:hover {
   border-color: var(--accent);
+}
+
+@media (min-width: 768px) {
+  .login-modal {
+    max-width: 480px;
+  }
+
+  .login-providers {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .login-provider-btn {
+    width: auto;
+    min-width: 180px;
+    justify-content: flex-start;
+    padding: 10px 24px;
+  }
 }
 
 /* ─── Confirm Modal ─── */
@@ -284,42 +330,21 @@ input:focus, select:focus {
   width: 36px;
   height: 36px;
   padding: 0;
-  font-size: 20px;
+  font-size: 18px;
   border-radius: 50%;
   flex-shrink: 0;
-}
-
-.btn-security {
-  position: relative;
-  font-size: 13px;
-  padding: 8px 12px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
   color: var(--text-secondary);
-  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
 }
 
-.btn-security.active {
-  border-color: var(--warning);
-  color: var(--warning);
+.btn-new:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
 }
 
-.security-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background: var(--danger);
-  color: #fff;
-  font-size: 10px;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 4px;
-}
+
 
 /* ─── Entry Items ─── */
 
@@ -411,13 +436,13 @@ input:focus, select:focus {
 }
 
 .strength-badge.weak {
-  background: rgba(255, 214, 10, 0.15);
-  color: var(--warning);
-}
-
-.strength-badge.compromised {
   background: rgba(255, 69, 58, 0.15);
   color: var(--danger);
+}
+
+.strength-badge.medium {
+  background: rgba(255, 214, 10, 0.15);
+  color: var(--warning);
 }
 
 /* ─── User Info ─── */
@@ -498,7 +523,7 @@ input:focus, select:focus {
 }
 
 .detail-body {
-  padding: 16px;
+  padding: 24px 16px;
 }
 
 .detail-title {
@@ -513,12 +538,26 @@ input:focus, select:focus {
   margin-bottom: 16px;
 }
 
+.field-label-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.field-label-row > .field-label {
+  margin-bottom: 0;
+}
+
+.field-label-row > .strength-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+}
+
 .field-label {
   display: block;
   font-size: 12px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   color: var(--text-secondary);
   margin-bottom: 6px;
 }
@@ -566,15 +605,6 @@ input:focus, select:focus {
   flex: 1;
 }
 
-.field-select {
-  width: 100%;
-  padding: 8px 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-primary);
-  border-radius: var(--radius-sm);
-}
-
 /* ─── Detail Meta ─── */
 
 .detail-meta {
@@ -598,6 +628,15 @@ input:focus, select:focus {
   text-align: center;
 }
 
+.detail-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
 /* ─── Password Generator ─── */
 
 .password-generator h2 {
@@ -605,60 +644,7 @@ input:focus, select:focus {
   margin-bottom: 16px;
 }
 
-.pg-password {
-  margin-bottom: 16px;
-}
 
-.pg-input {
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: 16px;
-  text-align: center;
-  margin-bottom: 8px;
-  padding: 10px;
-  letter-spacing: 1px;
-}
-
-.pg-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
-.pg-options {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.pg-option label {
-  display: block;
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-bottom: 4px;
-}
-
-.pg-slider {
-  width: 100%;
-  accent-color: var(--brand);
-}
-
-.pg-check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.pg-check input[type="checkbox"] {
-  width: auto;
-  accent-color: var(--brand);
-}
-
-.pg-use {
-  width: 100%;
-}
 
 /* ─── Responsive ─── */
 
@@ -687,10 +673,6 @@ input:focus, select:focus {
   }
 
   .btn-new {
-    order: 0;
-  }
-
-  .btn-security {
     order: 0;
   }
 

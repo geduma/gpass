@@ -1,5 +1,4 @@
-export default function EntryList({ entries, searchQuery, onSearchChange, securityFilter,
-  onSecurityToggle, alertCount, activeEntryId, onSelectEntry, user, onLogout, onNewEntry }) {
+export default function EntryList({ entries, searchQuery, onSearchChange, activeEntryId, onSelectEntry, user, onLogout, onNewEntry }) {
 
   return (
     <div className="entry-list">
@@ -14,14 +13,6 @@ export default function EntryList({ entries, searchQuery, onSearchChange, securi
         </div>
         <button className="btn btn-primary btn-new" onClick={onNewEntry} title="New entry">
           +
-        </button>
-        <button
-          className={`btn btn-security ${securityFilter ? 'active' : ''}`}
-          onClick={onSecurityToggle}
-          title="Security alerts"
-        >
-          {alertCount > 0 && <span className="security-badge">{alertCount}</span>}
-          Alerts
         </button>
       </div>
 
@@ -40,9 +31,9 @@ export default function EntryList({ entries, searchQuery, onSearchChange, securi
               <span className="entry-item-username">{entry.username}</span>
             </div>
             <div className="entry-item-meta">
-              {(entry.strength === 'weak' || entry.compromised) && (
-                <span className={`strength-badge ${entry.compromised ? 'compromised' : 'weak'}`}>
-                  {entry.compromised ? 'Compromised' : 'Weak'}
+              {entry.strength !== 'strong' && (
+                <span className={`strength-badge ${entry.strength}`}>
+                  {entry.strength === 'medium' ? 'Medium' : 'Weak'}
                 </span>
               )}
               <span className="entry-item-date">
