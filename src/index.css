@@ -653,10 +653,19 @@ input:read-only:focus {
 .detail-footer {
   display: flex;
   gap: 8px;
-  justify-content: flex-end;
+  justify-content: space-between;
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--border);
+}
+
+.detail-footer-left {
+  display: flex;
+  gap: 8px;
+}
+
+.detail-footer-close {
+  margin-left: auto;
 }
 
 /* ─── Password Generator ─── */
