@@ -321,7 +321,8 @@ input:read-only:focus {
 .confirm-actions {
   display: flex;
   gap: 8px;
-  justify-content: center;
+  justify-content: space-between;
+  margin-top: 24px;
 }
 
 /* ─── Entry List ─── */
@@ -654,7 +655,7 @@ input:read-only:focus {
   display: flex;
   gap: 8px;
   justify-content: space-between;
-  margin-top: 20px;
+  margin-top: 32px;
   padding-top: 16px;
   border-top: 1px solid var(--border);
 }

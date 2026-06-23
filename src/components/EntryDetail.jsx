@@ -276,9 +276,9 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
               {mode === 'edit' && (
                 <div className="detail-footer">
                   <div className="detail-footer-left">
-                    <button className="btn btn-cancel" onClick={handleCancel}>Cancel</button>
+                    <button className="btn btn-secondary" onClick={handleSave}>Save</button>
                   </div>
-                  <button className="btn btn-secondary detail-footer-close" onClick={handleSave}>Save</button>
+                  <button className="btn btn-secondary detail-footer-close" onClick={handleCancel}>Cancel</button>
                 </div>
               )}
             </>
