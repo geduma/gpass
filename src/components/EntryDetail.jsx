@@ -103,61 +103,66 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
   return (
     <div className="entry-detail-backdrop" onClick={onClose}>
       <div className={`entry-detail ${mode}`} onClick={e => e.stopPropagation()}>
-        {mode === 'view' && (
-          <div className="detail-header">
-            {!isNew && (
-              <button className="btn btn-secondary" onClick={handleEdit}>Edit</button>
-            )}
-            {!isNew && (
-              <button className="btn btn-danger" onClick={handleDelete}>Delete</button>
-            )}
-            <button className="btn btn-close" onClick={onClose}>✕</button>
-          </div>
-        )}
-
-        {mode === 'view' && entry.strength === 'weak' && (
-          <div className="detail-alerts">
-            <span className="strength-badge weak">Weak</span>
-          </div>
-        )}
-
         <div className="detail-body">
           {mode === 'view' ? (
             <>
-              <h2 className="detail-title">{entry.title}</h2>
+              <div className="field-row edit">
+                <label className="field-label">Title</label>
+                <input
+                  type="text"
+                  value={entry.title}
+                  readOnly
+                />
+              </div>
 
-              <div className="field-row">
+              <div className="field-row edit">
                 <label className="field-label">Username</label>
-                <div className="field-value">
-                  <span>{entry.username}</span>
-                  <button className="btn btn-icon" onClick={() => copyToClipboard(entry.username)} title="Copy">
+                <div className="field-edit-with-btn">
+                  <input
+                    type="text"
+                    value={entry.username}
+                    readOnly
+                  />
+                  <button className="btn btn-secondary" onClick={() => copyToClipboard(entry.username)}>
                     Copy
                   </button>
                 </div>
               </div>
 
-              <div className="field-row">
-                <label className="field-label">Password</label>
-                <div className="field-value">
-                  <span className="password-text">
-                    {showPassword ? entry.password : '•'.repeat(20)}
-                  </span>
-                  <button className="btn btn-icon" onClick={() => setShowPassword(!showPassword)} title="Show/Hide">
-                    {showPassword ? 'Hide' : 'Show'}
-                  </button>
-                  <button className="btn btn-icon" onClick={() => copyToClipboard(entry.password)} title="Copy">
+              <div className="field-row edit">
+                <div className="field-label-row">
+                  <label className="field-label">Password</label>
+                  {entry.strength && (
+                    <span className={`strength-badge ${entry.strength}`}>
+                      {strengthLabel(entry.strength)}
+                    </span>
+                  )}
+                </div>
+                <div className="field-edit-with-btn">
+                  <div className="password-input-wrap">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={entry.password}
+                      readOnly
+                    />
+                    <button className="btn btn-secondary" onClick={() => setShowPassword(!showPassword)}>
+                      {showPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                  <button className="btn btn-secondary" onClick={() => copyToClipboard(entry.password)}>
                     Copy
                   </button>
                 </div>
               </div>
 
-              <div className="detail-meta">
-                <span className={`strength-badge ${entry.strength}`}>
-                  {strengthLabel(entry.strength)}
-                </span>
-                <span className="detail-date">
-                  Updated: {entry.updatedAt ? entry.updatedAt.split('T')[0] || entry.updatedAt : ''}
-                </span>
+              <div className="detail-footer">
+                {!isNew && (
+                  <button className="btn btn-danger" onClick={handleDelete}>Delete</button>
+                )}
+                {!isNew && (
+                  <button className="btn btn-secondary" onClick={handleEdit}>Edit</button>
+                )}
+                <button className="btn btn-save" onClick={onClose}>Close</button>
               </div>
             </>
           ) : (
