@@ -59,6 +59,14 @@ input:focus, select:focus {
   border-color: var(--brand);
 }
 
+input:read-only {
+  cursor: default;
+}
+
+input:read-only:focus {
+  border-color: var(--border);
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }
