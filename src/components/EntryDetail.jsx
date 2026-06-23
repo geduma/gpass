@@ -40,6 +40,8 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
   const [mode, setMode] = useState('view')
   const [showPassword, setShowPassword] = useState(false)
   const [form, setForm] = useState({})
+  const [copied, setCopied] = useState(null)
+  const [tagInput, setTagInput] = useState('')
 
   useEffect(() => {
     if (entry) {
@@ -48,7 +50,8 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
         title: entry.title || '',
         username: entry.username || '',
         password,
-        strength: entry.strength || evaluateStrength(password)
+        strength: entry.strength || evaluateStrength(password),
+        tags: entry.tags || []
       })
       setMode(entry._id ? 'view' : 'edit')
       setShowPassword(false)
@@ -62,7 +65,8 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
       title: entry.title,
       username: entry.username,
       password: entry.password,
-      strength: entry.strength
+      strength: entry.strength,
+      tags: entry.tags || []
     })
     setMode('edit')
   }
@@ -88,14 +92,40 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
     })
   }
 
-  async function copyToClipboard(text) {
+  async function copyToClipboard(text, field) {
     try {
       await navigator.clipboard.writeText(text)
+      setCopied(field)
+      setTimeout(() => setCopied(null), 1500)
     } catch {}
   }
 
   function handleDelete() {
     onDelete(entry._id)
+  }
+
+  function addTag(value) {
+    const trimmed = value.trim()
+    if (!trimmed) return
+    setForm(prev => ({
+      ...prev,
+      tags: [...(prev.tags || []), trimmed]
+    }))
+    setTagInput('')
+  }
+
+  function removeTag(index) {
+    setForm(prev => ({
+      ...prev,
+      tags: prev.tags.filter((_, i) => i !== index)
+    }))
+  }
+
+  function handleTagKeyDown(e) {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      addTag(e.target.value)
+    }
   }
 
   const isNew = !entry._id
@@ -108,12 +138,23 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
             <>
               <div className="field-row edit">
                 <label className="field-label">Title</label>
-                <input
-                  type="text"
-                  value={entry.title}
-                  readOnly
-                />
-              </div>
+                  <input
+                    type="text"
+                    value={entry.title}
+                    readOnly
+                  />
+                </div>
+
+              {entry.tags && entry.tags.length > 0 && (
+                <div className="field-row">
+                  <label className="field-label">Tags</label>
+                  <div className="tags-row">
+                    {entry.tags.map((tag, i) => (
+                      <span key={i} className="tag-chip">{tag}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="field-row edit">
                 <label className="field-label">Username</label>
@@ -123,8 +164,8 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
                     value={entry.username}
                     readOnly
                   />
-                  <button className="btn btn-secondary" onClick={() => copyToClipboard(entry.username)}>
-                    Copy
+                  <button className="btn btn-secondary" onClick={() => copyToClipboard(entry.username, 'username')}>
+                    {copied === 'username' ? 'Copied!' : 'Copy'}
                   </button>
                 </div>
               </div>
@@ -149,8 +190,8 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
                       {showPassword ? 'Hide' : 'Show'}
                     </button>
                   </div>
-                  <button className="btn btn-secondary" onClick={() => copyToClipboard(entry.password)}>
-                    Copy
+                  <button className="btn btn-secondary" onClick={() => copyToClipboard(entry.password, 'password')}>
+                    {copied === 'password' ? 'Copied!' : 'Copy'}
                   </button>
                 </div>
               </div>
@@ -173,6 +214,25 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
                   type="text"
                   value={form.title}
                   onChange={e => handleFieldChange('title', e.target.value)}
+                />
+              </div>
+
+              <div className="field-row">
+                <div className="tags-row">
+                  {(form.tags || []).map((tag, i) => (
+                    <span key={i} className="tag-chip tag-chip-removable">
+                      {tag}
+                      <button className="tag-remove" onClick={() => removeTag(i)} type="button">×</button>
+                    </span>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  className="tag-input"
+                  value={tagInput}
+                  onChange={e => setTagInput(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  placeholder="Add tag..."
                 />
               </div>
 
@@ -210,10 +270,6 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
                   </button>
                 </div>
               </div>
-
-              {isNew && (
-                <p className="detail-hint">The dates will be generated server-side.</p>
-              )}
 
               {mode === 'edit' && (
                 <div className="detail-footer">

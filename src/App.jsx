@@ -59,7 +59,7 @@ export default function App() {
 
   function handleNewEntry() {
     setShowNewEntry(true)
-    setActiveEntry({ title: '', username: '', password: '', strength: 'strong' })
+    setActiveEntry({ title: '', username: '', password: '', strength: 'strong', tags: [] })
   }
 
   async function handleSave(form) {
@@ -72,6 +72,7 @@ export default function App() {
         if (form.username !== undefined) fields.username = form.username
         if (form.password !== undefined && form.password !== '') fields.password = form.password
         if (form.strength !== undefined) fields.strength = form.strength
+        if (form.tags !== undefined) fields.tags = form.tags
         await updateEntry(form._id, fields, user.email)
       } else {
         await createEntry({
@@ -79,7 +80,8 @@ export default function App() {
           username: form.username,
           password: form.password,
           strength: form.strength || 'strong',
-          owner: user.ownerHash
+          owner: user.ownerHash,
+          tags: form.tags || []
         }, user.email)
       }
       setActiveEntry(null)

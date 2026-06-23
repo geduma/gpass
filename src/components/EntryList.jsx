@@ -29,6 +29,16 @@ export default function EntryList({ entries, searchQuery, onSearchChange, active
             <div className="entry-item-info">
               <span className="entry-item-title">{entry.title}</span>
               <span className="entry-item-username">{entry.username}</span>
+              {entry.tags && entry.tags.length > 0 && (
+                <div className="entry-item-tags">
+                  {entry.tags.slice(0, 3).map((tag, i) => (
+                    <span key={i} className="entry-item-tag">{tag}</span>
+                  ))}
+                  {entry.tags.length > 3 && (
+                    <span className="entry-item-tags-more">+{entry.tags.length - 3}</span>
+                  )}
+                </div>
+              )}
             </div>
             <div className="entry-item-meta">
               {entry.strength !== 'strong' && (

@@ -29,6 +29,7 @@ function normalizeEntry(entry, plainPassword) {
     encrypted: entry.encrypted,
     iv: entry.iv,
     owner: entry.owner,
+    tags: entry.tags || [],
     createdAt: entry.createdAt || entry.created,
     updatedAt: entry.updatedAt || entry.updated
   }
@@ -57,7 +58,7 @@ export async function fetchEntries(owner, query, email) {
   return decrypted.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
 }
 
-export async function createEntry({ title, username, password, strength, owner }, email) {
+export async function createEntry({ title, username, password, strength, owner, tags }, email) {
   const { ciphertext, iv } = await encryptField(password, email)
   const now = new Date().toISOString()
 
@@ -69,7 +70,8 @@ export async function createEntry({ title, username, password, strength, owner }
     strength: strength || 'strong',
     encrypted: "true",
     iv,
-    owner
+    owner,
+    ...(tags && { tags })
   }
   const res = await fetch(`${CRUD_BASE}`, {
     method: 'POST',
@@ -91,6 +93,7 @@ export async function createEntry({ title, username, password, strength, owner }
     encrypted: "true",
     iv,
     owner,
+    tags: tags || [],
     createdAt: now,
     updatedAt: now
   }
