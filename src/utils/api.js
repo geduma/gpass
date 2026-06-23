@@ -126,13 +126,11 @@ export async function updateEntry(id, fields, email) {
 
 export async function deleteEntry(id, owner) {
   const token = await getToken()
-  const res = await fetch(`${CRUD_BASE}/${id}`, {
+  const res = await fetch(`${CRUD_BASE}/${id}?owner=${encodeURIComponent(owner)}`, {
     method: 'DELETE',
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({ owner })
+    }
   })
   if (res.status === 204) return
   const json = await res.json()

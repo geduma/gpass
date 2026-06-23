@@ -31,6 +31,11 @@ describe('crypto', () => {
     expect(keyA).toEqual(keyB)
   })
 
+  it('produces different keys for different emails', async () => {
+    const encrypted = await encryptField('secret', 'user1@mail.com')
+    await expect(decryptField(encrypted, 'user2@mail.com')).rejects.toThrow()
+  })
+
   it('throws on tampered ciphertext', async () => {
     const encrypted = await encryptField('hello', EMAIL)
     const tampered = {

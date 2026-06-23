@@ -7,14 +7,39 @@ import LoginModal from './components/LoginModal'
 import ConfirmModal from './components/ConfirmModal'
 import Spinner from './components/Spinner'
 
+const IDLE_TIMEOUT = 5 * 60 * 1000
+
 export default function App() {
-  const { user, providers, setProviders, logout } = useAuth()
+  const { user, logout } = useAuth()
   const [entries, setEntries] = useState([])
   const [activeEntry, setActiveEntry] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [showNewEntry, setShowNewEntry] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    let timer = setTimeout(() => {
+      handleLogout()
+    }, IDLE_TIMEOUT)
+
+    function reset() {
+      clearTimeout(timer)
+      timer = setTimeout(() => handleLogout(), IDLE_TIMEOUT)
+    }
+
+    window.addEventListener('mousedown', reset)
+    window.addEventListener('keydown', reset)
+    window.addEventListener('touchstart', reset)
+
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('mousedown', reset)
+      window.removeEventListener('keydown', reset)
+      window.removeEventListener('touchstart', reset)
+    }
+  }, [user])
 
   const loadEntries = useCallback(async () => {
     if (!user) return

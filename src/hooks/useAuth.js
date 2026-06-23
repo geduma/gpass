@@ -23,7 +23,6 @@ export async function startLogin(appId, providerId) {
 
 export function useAuth() {
   const [user, setUser] = useState(null)
-  const [providers, setProviders] = useState([])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -58,9 +57,8 @@ export function useAuth() {
 
   const logout = useCallback(() => {
     setUser(null)
-    setProviders([])
     localStorage.removeItem(STORAGE_KEY)
   }, [])
 
-  return { user, providers, setProviders, logout }
+  return { user, logout }
 }
