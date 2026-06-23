@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const LOWERCASE = 'abcdefghijklmnopqrstuvwxyz'
 const UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -45,6 +45,7 @@ function strengthLabel(s) {
 export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
   const [mode, setMode] = useState('view')
   const [showPassword, setShowPassword] = useState(false)
+  const showTimerRef = useRef(null)
   const [form, setForm] = useState({})
   const [copied, setCopied] = useState(null)
   const [tagInput, setTagInput] = useState('')
@@ -64,6 +65,15 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
       setShowPassword(false)
     }
   }, [entry])
+
+  useEffect(() => {
+    if (showPassword) {
+      showTimerRef.current = setTimeout(() => setShowPassword(false), 10000)
+    }
+    return () => {
+      if (showTimerRef.current) clearTimeout(showTimerRef.current)
+    }
+  }, [showPassword])
 
   function handleEdit() {
     setForm({

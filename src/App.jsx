@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { fetchEntries, createEntry, updateEntry, deleteEntry } from './utils/api'
 import EntryList from './components/EntryList'
@@ -17,29 +17,8 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [showNewEntry, setShowNewEntry] = useState(false)
-
-  useEffect(() => {
-    if (!user) return
-    let timer = setTimeout(() => {
-      handleLogout()
-    }, IDLE_TIMEOUT)
-
-    function reset() {
-      clearTimeout(timer)
-      timer = setTimeout(() => handleLogout(), IDLE_TIMEOUT)
-    }
-
-    window.addEventListener('mousedown', reset)
-    window.addEventListener('keydown', reset)
-    window.addEventListener('touchstart', reset)
-
-    return () => {
-      clearTimeout(timer)
-      window.removeEventListener('mousedown', reset)
-      window.removeEventListener('keydown', reset)
-      window.removeEventListener('touchstart', reset)
-    }
-  }, [user])
+  const lastActivityRef = useRef(Date.now())
+  const loadEntriesRef = useRef(null)
 
   const loadEntries = useCallback(async () => {
     if (!user) return
@@ -52,11 +31,55 @@ export default function App() {
       )
       setEntries(data)
     } catch (err) {
-      console.error('Failed to load entries:', err)
+      if (import.meta.env.DEV) console.error('Failed to load entries:', err)
     } finally {
       setLoading(false)
     }
   }, [user, searchQuery])
+
+  loadEntriesRef.current = loadEntries
+
+  useEffect(() => {
+    if (!user) return
+    lastActivityRef.current = Date.now()
+    let timer = setTimeout(() => {
+      handleLogout()
+    }, IDLE_TIMEOUT)
+
+    function reset() {
+      lastActivityRef.current = Date.now()
+      clearTimeout(timer)
+      timer = setTimeout(() => handleLogout(), IDLE_TIMEOUT)
+    }
+
+    window.addEventListener('mousedown', reset)
+    window.addEventListener('keydown', reset)
+    window.addEventListener('touchstart', reset)
+
+    function onVisibilityChange() {
+      if (document.hidden) {
+        setEntries([])
+        setActiveEntry(null)
+      } else {
+        if (Date.now() - lastActivityRef.current >= IDLE_TIMEOUT) {
+          handleLogout()
+        } else if (loadEntriesRef.current) {
+          loadEntriesRef.current()
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    loadEntriesRef.current()
+
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('mousedown', reset)
+      window.removeEventListener('keydown', reset)
+      window.removeEventListener('touchstart', reset)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [user])
 
   useEffect(() => {
     loadEntries()
@@ -113,7 +136,7 @@ export default function App() {
       setShowNewEntry(false)
       await loadEntries()
     } catch (err) {
-      console.error('Failed to save entry:', err)
+      if (import.meta.env.DEV) console.error('Failed to save entry:', err)
     } finally {
       setLoading(false)
     }
@@ -132,7 +155,7 @@ export default function App() {
       setConfirmDelete(null)
       await loadEntries()
     } catch (err) {
-      console.error('Failed to delete entry:', err)
+      if (import.meta.env.DEV) console.error('Failed to delete entry:', err)
     } finally {
       setLoading(false)
     }
