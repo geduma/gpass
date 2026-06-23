@@ -47,7 +47,7 @@
   "username": "felipe@geduma.com",
   "password": "ciphertext-base64",
   "strength": "strong",
-  "encrypted": true,
+  "encrypted": "true",
   "iv": "iv-base64",
   "updated": "2026-06-22",
   "created": "2026-01-01",
@@ -169,11 +169,11 @@ Componente principal de la vista lista. Contiene:
 
 - **Search bar**: input de texto, filtra por `title` y `username` (server-side)
 - **Botón "+"**: abre `EntryDetail` en modo creación (entry vacío)
-- **Toggle Security Alerts**: activa filtro `security=true`
 - **Lista de entradas**: cada item muestra:
   - Título (negrita)
   - Username (texto secundario)
-  - Badge si `weak` (amarillo) o `compromised` (rojo)
+  - Tags (hasta 3 chips + contador)
+  - Badge si `medium` o `weak`
   - Fecha de actualización
   - Al hacer clic → `handleSelectEntry(id)`
 - **User info** (abajo):
@@ -343,7 +343,7 @@ Filtra entries donde `strength === 'weak'` o `compromised === true`.
 
 ```js
 deriveKey(email)
-  → PBKDF2 con salt 'gpass-cipher-v1', 100k iteraciones
+  → PBKDF2 con salt 'gpass-cipher-v2', 100k iteraciones
   → AES-GCM 256 key
 
 encryptField(plaintext, email)
@@ -412,7 +412,7 @@ deleteEntry(id, owner)
 ```
 email
   ↓
-PBKDF2(password=email, salt='gpass-cipher-v1', iterations=100000, hash=SHA-256)
+PBKDF2(password=email, salt='gpass-cipher-v2', iterations=100000, hash=SHA-256)
   ↓
 AES-GCM 256 key
   ↓
@@ -459,9 +459,9 @@ decrypt({ ciphertext, iv }) → plaintext
 | `.entry-detail.edit` | Modo edición |
 | `.field-row` | Label + valor + botones |
 | `.password-display` | Input de password |
-| `.strength-badge` | Badge weak/compromised/strong |
+| `.strength-badge` | Badge weak/medium/strong |
 | `.strength-badge.weak` | Badge amarillo |
-| `.strength-badge.compromised` | Badge rojo |
+| `.strength-badge.medium` | Badge naranja |
 | `.strength-badge.strong` | Badge verde |
 | `.password-generator` | Modal generador |
 | `.modal-overlay` | Fondo del modal |
@@ -519,26 +519,13 @@ describe('hash.js')
 
 ---
 
-## 12. Variables de Entorno
-
-```env
-VITE_API_AUTH_KEY=<your-api-key>
-VITE_APP_ID=<your-app-id>
-```
-
-- `VITE_API_AUTH_KEY`: misma que el resto de apps geduma
-- `VITE_APP_ID`: nueva app para gpass, registrarla en geduma-auth
-
----
-
-## 13. Archivos del Proyecto
+## 11. Archivos del Proyecto
 
 ```
 gpass/
 ├── index.html
 ├── vite.config.js
 ├── package.json
-├── .env
 ├── .env.example
 ├── public/
 ├── src/
@@ -548,13 +535,11 @@ gpass/
 │   ├── components/
 │   │   ├── EntryList.jsx
 │   │   ├── EntryDetail.jsx
-│   │   ├── PasswordGenerator.jsx
 │   │   ├── LoginModal.jsx
 │   │   ├── ConfirmModal.jsx
 │   │   └── Spinner.jsx
 │   ├── hooks/
-│   │   ├── useAuth.js
-│   │   └── useSecurityAlerts.js
+│   │   └── useAuth.js
 │   └── utils/
 │       ├── api.js
 │       ├── crypto.js
@@ -571,11 +556,11 @@ gpass/
 
 ---
 
-## 14. Orden de Implementación
+## 12. Orden de Implementación
 
 | # | Paso | Descripción | Archivos |
 |---|------|-------------|----------|
-| 1 | **Init proyecto** | `npm create vite`, instalar dependencias, configurar vitest | `package.json`, `vite.config.js`, `index.html`, `.env`, `.gitignore` |
+| 1 | **Init proyecto** | `npm create vite`, instalar dependencias, configurar vitest | `package.json`, `vite.config.js`, `index.html`, `.gitignore` |
 | 2 | **CSS base** | Custom properties, reset, layout base | `src/index.css` |
 | 3 | **hash.js** | SHA-256 utility | `src/utils/hash.js`, `test/hash.test.js` |
 | 4 | **crypto.js + tests** | AES-GCM 256 + PBKDF2 | `src/utils/crypto.js`, `test/crypto.test.js` |
@@ -583,17 +568,15 @@ gpass/
 | 6 | **api.js + tests** | REST client con cifrado integrado | `src/utils/api.js`, `test/api.test.js` |
 | 7 | **Modals reutilizables** | LoginModal, Spinner, ConfirmModal | `src/components/LoginModal.jsx`, `Spinner.jsx`, `ConfirmModal.jsx` |
 | 8 | **App.jsx** | Estado global, orquestación CRUD | `src/App.jsx`, `src/main.jsx` |
-| 9 | **EntryList.jsx** | Lista, search, security toggle, user info | `src/components/EntryList.jsx` |
-| 10 | **EntryDetail.jsx** | Vista/edición toggle, copy, show/hide | `src/components/EntryDetail.jsx` |
-| 11 | **PasswordGenerator.jsx** | Modal generador | `src/components/PasswordGenerator.jsx` |
-| 12 | **useSecurityAlerts.js** | Hook de filtro | `src/hooks/useSecurityAlerts.js` |
-| 13 | **CSS completo** | Estilos detalle, lista, overlay, responsive | `src/index.css` |
-| 14 | **Especificación backend** | Documento para crear API en geduma-api | `AGENTS.md` |
-| 15 | **Build + deploy** | Verificar build y workflow Azure | `vite.config.js`, `.github/workflows/*` |
+| 9 | **EntryList.jsx** | Lista, search, user info | `src/components/EntryList.jsx` |
+| 10 | **EntryDetail.jsx** | Vista/edición toggle, copy, show/hide, generación de password | `src/components/EntryDetail.jsx` |
+| 11 | **CSS completo** | Estilos detalle, lista, overlay, responsive, tags | `src/index.css` |
+| 12 | **Especificación backend** | Documento para crear API en geduma-api | `AGENTS.md` |
+| 13 | **Build + deploy** | Verificar build y configurar deploy | `vite.config.js` |
 
 ---
 
-## 15. Especificación Backend (para geduma-api)
+## 13. Especificación Backend (para geduma-api)
 
 Ver `AGENTS.md` para la especificación detallada del módulo backend. Incluye:
 
@@ -604,4 +587,4 @@ Ver `AGENTS.md` para la especificación detallada del módulo backend. Incluye:
 - Almacenamiento ciego (`password`, `encrypted`, `iv` se guardan sin inspeccionar)
 - Index en `owner` para queries eficientes
 - Búsqueda textual en `title` y `username`
-- Filtro `security=true` para `weak` y `compromised`
+- Filtro `security=true` para weak

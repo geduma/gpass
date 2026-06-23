@@ -164,18 +164,16 @@ El router debe registrarse con base path `/gpass`.
 
 ## 5. Autenticación
 
-Usar el mismo middleware `security.verify` que las demás APIs. Requiere:
+Usar el middleware de autenticación estándar del proyecto. Requiere:
 - JWT single-use obtenido via `POST /auth`
 - Header `Authorization: Bearer {token}`
-
-El middleware ya existe en `geduma-api` y se comparte entre módulos.
 
 ---
 
 ## 6. Notas
 
 - Almacenamiento ciego: `password`, `encrypted` e `iv` se guardan y devuelven sin procesar.
-- Búsqueda textual: usar `$regex` con flag `i` sobre `title` y `username`.
+- Búsqueda textual sobre `title` y `username`.
 - Filtro security: `{ $or: [{ strength: 'weak' }, { compromised: true }] }`.
 - Owner es obligatorio en todas las operaciones.
 - El `_id` de MongoDB se usa como identificador (no hay slugs).
