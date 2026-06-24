@@ -2,17 +2,13 @@ import { encryptField, decryptField } from './crypto'
 
 const AUTH_BASE = 'https://api.geduma.com/auth'
 const CRUD_BASE = 'https://api.geduma.com/gpass'
-const AUTH = {
-  name: 'gpass',
-  user: 'geduma',
-  key: import.meta.env.VITE_API_AUTH_KEY
-}
+const KEY = import.meta.env.VITE_API_AUTH_KEY
 
-async function getToken() {
+async function getToken(email) {
   const res = await fetch(`${AUTH_BASE}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(AUTH)
+    body: JSON.stringify({ name: 'gpass', user: email, key: KEY })
   })
   const json = await res.json()
   if (!json.ok) throw new Error(json.msg)
@@ -43,7 +39,7 @@ async function decryptEntry(entry, email) {
 }
 
 export async function fetchEntries(owner, query, email) {
-  const token = await getToken()
+  const token = await getToken(email)
   const params = new URLSearchParams({ owner })
   if (query) params.set('q', query)
 
@@ -62,7 +58,7 @@ export async function createEntry({ title, username, password, strength, owner, 
   const { ciphertext, iv } = await encryptField(password, email)
   const now = new Date().toISOString()
 
-  const token = await getToken()
+  const token = await getToken(email)
   const body = {
     title,
     username: username || '',
@@ -109,7 +105,7 @@ export async function updateEntry(id, fields, email) {
     body.iv = iv
   }
 
-  const token = await getToken()
+  const token = await getToken(email)
   const res = await fetch(`${CRUD_BASE}/${id}`, {
     method: 'PUT',
     headers: {
@@ -124,8 +120,8 @@ export async function updateEntry(id, fields, email) {
   return decryptEntry(json.data, email)
 }
 
-export async function deleteEntry(id, owner) {
-  const token = await getToken()
+export async function deleteEntry(id, owner, email) {
+  const token = await getToken(email)
   const res = await fetch(`${CRUD_BASE}/${id}?owner=${encodeURIComponent(owner)}`, {
     method: 'DELETE',
     headers: {
