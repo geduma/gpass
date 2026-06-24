@@ -121,6 +121,7 @@ export default function App() {
         if (form.password !== undefined && form.password !== '') fields.password = form.password
         if (form.strength !== undefined) fields.strength = form.strength
         if (form.tags !== undefined) fields.tags = form.tags
+        fields.owner = user.ownerHash
         await updateEntry(form._id, fields, user.email)
       } else {
         await createEntry({
