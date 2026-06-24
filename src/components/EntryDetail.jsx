@@ -75,6 +75,14 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
     }
   }, [showPassword])
 
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   function handleEdit() {
     setForm({
       title: entry.title,
@@ -156,7 +164,7 @@ export default function EntryDetail({ entry, onClose, onSave, onDelete }) {
   const isNew = !entry._id
 
   return (
-    <div className="entry-detail-backdrop" onClick={onClose}>
+    <div className="entry-detail-backdrop">
       <div className={`entry-detail ${mode}`} onClick={e => e.stopPropagation()}>
         <div className="detail-body">
           {mode === 'view' ? (
