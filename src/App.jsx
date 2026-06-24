@@ -150,7 +150,7 @@ export default function App() {
     if (!confirmDelete || !user) return
     setLoading(true)
     try {
-      await deleteEntry(confirmDelete, user.ownerHash)
+      await deleteEntry(confirmDelete, user.ownerHash, user.email)
       setActiveEntry(null)
       setConfirmDelete(null)
       await loadEntries()

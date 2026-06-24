@@ -113,7 +113,7 @@ describe('api', () => {
     ])
     vi.stubGlobal('fetch', mock)
 
-    await api.deleteEntry(entryId, ownerHash)
+    await api.deleteEntry(entryId, ownerHash, email)
 
     const deleteCall = mock.mock.calls[1]
     expect(deleteCall[0]).toBe(`https://api.geduma.com/gpass/${entryId}?owner=${ownerHash}`)
