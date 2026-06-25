@@ -10,6 +10,12 @@
 src/apis/gpass/
 ├── gpass.routes.js
 ├── gpass.model.js
+├── gpass.validation.js
+├── models/
+│   └── allowed-users.model.js
+└── services/
+    ├── gpass.service.js
+    └── allowed-users.service.js
 ```
 
 ---
@@ -37,6 +43,23 @@ Colección: `gpass`
 **Index**: `{ owner: 1 }` para queries por owner.
 
 **Nota**: El servidor NO debe inspeccionar ni modificar `password`, `encrypted` ni `iv`. Son datos cifrados client-side que se almacenan y devuelven tal cual.
+
+---
+
+### 2.1. Modelo `allowed_users` (`allowed-users.model.js`)
+
+Colección: `allowed_users`
+
+```js
+{
+  _id: ObjectId,
+  email: String,     // email en lowercase, unique, requerido
+  enabled: Boolean,  // default true
+  timestamps: true   // createdAt, updatedAt
+}
+```
+
+**Index**: `{ email: 1 }` (unique).
 
 ---
 
@@ -226,7 +249,28 @@ El email se extrae del campo `data.user` del JWT.
 
 ---
 
-## 6. Notas
+## 6. Frontend — Control de Acceso
+
+El frontend (`gpass`) verifica si el usuario está autorizado inmediatamente después del login:
+
+1. Usuario se autentica vía OAuth → `useAuth` expone `{ email, ownerHash, ... }`
+2. `App.jsx` llama a `checkAllowed(email)` → `GET /gpass/allowed`
+3. Mientras se verifica: se muestra `<Spinner />` (pantalla completa)
+4. Si `allowed === false`:
+   - Se muestra mensaje "You do not have access to gpass." sobre el `LoginModal`
+   - Se ejecuta `logout()` automáticamente
+   - El mensaje desaparece a los 4 segundos
+5. Si `allowed === true`: se carga la UI normal (`EntryList`, `EntryDetail`)
+
+**Archivos involucrados**:
+- `src/utils/api.js` — función `checkAllowed(email)`
+- `src/App.jsx` — estado `allowed`, efecto de verificación, render condicional
+- `src/components/LoginModal.jsx` — prop `restrictedMsg` para mostrar error de acceso
+- `src/index.css` — clase `.restricted-banner` para el mensaje de error
+
+---
+
+## 7. Notas
 
 - Almacenamiento ciego: `password`, `encrypted` e `iv` se guardan y devuelven sin procesar.
 - Búsqueda textual sobre `title` y `username`.
