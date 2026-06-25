@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from './hooks/useAuth'
-import { fetchEntries, createEntry, updateEntry, deleteEntry } from './utils/api'
+import { fetchEntries, createEntry, updateEntry, deleteEntry, checkAllowed } from './utils/api'
 import EntryList from './components/EntryList'
 import EntryDetail from './components/EntryDetail'
 import LoginModal from './components/LoginModal'
@@ -17,6 +17,8 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [showNewEntry, setShowNewEntry] = useState(false)
+  const [allowed, setAllowed] = useState(null)
+  const [restrictedMsg, setRestrictedMsg] = useState(null)
   const lastActivityRef = useRef(Date.now())
   const loadEntriesRef = useRef(null)
 
@@ -84,6 +86,26 @@ export default function App() {
   useEffect(() => {
     loadEntries()
   }, [loadEntries])
+
+  useEffect(() => {
+    if (!user) {
+      setAllowed(null)
+      return
+    }
+    checkAllowed(user.email).then(res => {
+      if (!res.allowed) {
+        setRestrictedMsg('You do not have access to gpass.')
+        logout()
+        setTimeout(() => setRestrictedMsg(null), 4000)
+        return
+      }
+      setAllowed(true)
+    }).catch(() => {
+      setRestrictedMsg('You do not have access to gpass.')
+      logout()
+      setTimeout(() => setRestrictedMsg(null), 4000)
+    })
+  }, [user])
 
   function handleSearchChange(query) {
     setSearchQuery(query)
@@ -170,7 +192,11 @@ export default function App() {
   }
 
   if (!user) {
-    return <LoginModal />
+    return <LoginModal restrictedMsg={restrictedMsg} />
+  }
+
+  if (allowed === null) {
+    return <Spinner />
   }
 
   const showDetail = activeEntry !== null || showNewEntry

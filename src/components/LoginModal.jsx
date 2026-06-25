@@ -3,7 +3,7 @@ import { fetchProviders, startLogin } from '../hooks/useAuth'
 
 const APP_ID = import.meta.env.VITE_APP_ID
 
-export default function LoginModal() {
+export default function LoginModal({ restrictedMsg }) {
   const [providers, setProviders] = useState([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -37,6 +37,10 @@ export default function LoginModal() {
         {!loading && !error && providers.length === 0 && (
           <p className="login-error">No providers available</p>
         )}
+
+        {restrictedMsg && <p className="login-error restricted-banner">{restrictedMsg}</p>}
+
+        <p className="login-restricted">Access is restricted to permitted users</p>
 
         <div className="login-providers">
           {providers.map(p => (

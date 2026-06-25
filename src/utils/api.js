@@ -120,6 +120,17 @@ export async function updateEntry(id, fields, email) {
   return decryptEntry(json.data, email)
 }
 
+export async function checkAllowed(email) {
+  const token = await getToken(email)
+  const res = await fetch(`${CRUD_BASE}/allowed`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  if (res.status === 401) return { allowed: false }
+  const json = await res.json()
+  if (!json.ok) throw new Error(json.msg || 'Failed to check access')
+  return { allowed: json.data.allowed }
+}
+
 export async function deleteEntry(id, owner, email) {
   const token = await getToken(email)
   const res = await fetch(`${CRUD_BASE}/${id}?owner=${encodeURIComponent(owner)}`, {

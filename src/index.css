@@ -229,6 +229,15 @@ input:read-only:focus {
   color: var(--danger);
 }
 
+.restricted-banner {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: rgba(255, 69, 58, 0.1);
+  border: 1px solid rgba(255, 69, 58, 0.25);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
 .login-providers {
   display: flex;
   flex-direction: column;
@@ -269,6 +278,13 @@ input:read-only:focus {
   .login-modal {
     max-width: 360px;
   }
+}
+
+.login-restricted {
+  color: var(--text-secondary);
+  font-size: 11px;
+  margin-bottom: 16px;
+  opacity: 0.6;
 }
 
 /* ─── Confirm Modal ─── */
@@ -693,3 +709,5 @@ input:read-only:focus {
     margin: 0 8px;
   }
 }
+
+

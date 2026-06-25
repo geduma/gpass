@@ -170,6 +170,62 @@ Usar el middleware de autenticación estándar del proyecto. Requiere:
 
 ---
 
+### 3.6. GET `/gpass/allowed`
+
+Verifica si el usuario autenticado está autorizado a usar gpass.
+
+**Headers**:
+| Header | Valor |
+|--------|-------|
+| `Authorization` | `Bearer <jwt>` |
+
+El JWT debe ser obtenido previamente vía `POST /auth` con `{ name: 'gpass', user: <email>, key: <API_GPASS_KEY> }`.
+
+El email se extrae del campo `data.user` del JWT.
+
+**Response**:
+
+`200 — OK`
+```json
+{
+  "ok": true,
+  "data": {
+    "allowed": true
+  }
+}
+```
+
+```json
+{
+  "ok": true,
+  "data": {
+    "allowed": false
+  }
+}
+```
+
+`400 — Token inválido` (si el JWT no contiene `data.user`)
+```json
+{
+  "ok": false,
+  "msg": "Invalid token payload"
+}
+```
+
+`401 — No autorizado` (JWT ausente, expirado, o inválido)
+```json
+{
+  "ok": false,
+  "msg": "Unauthorized: invalid or missing token"
+}
+```
+
+**Notas**:
+- La lista de emails permitidos se administra insertando documentos directamente en la colección `allowed_users` de la base de datos de gpass
+- Rate limit: 60 requests/minuto
+
+---
+
 ## 6. Notas
 
 - Almacenamiento ciego: `password`, `encrypted` e `iv` se guardan y devuelven sin procesar.
