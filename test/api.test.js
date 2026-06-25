@@ -120,4 +120,41 @@ describe('api', () => {
     expect(deleteCall[1].method).toBe('DELETE')
     expect(deleteCall[1].body).toBeUndefined()
   })
+
+  it('checkAllowed returns allowed=true when user is authorized', async () => {
+    const mock = fetchMockFactory([
+      { status: 200, json: { ok: true, data: { token: 'jwt' } } },
+      { status: 200, json: { ok: true, data: { allowed: true } } }
+    ])
+    vi.stubGlobal('fetch', mock)
+
+    const result = await api.checkAllowed(email)
+    expect(result.allowed).toBe(true)
+
+    const getCall = mock.mock.calls[1]
+    expect(getCall[0]).toBe('https://api.geduma.com/gpass/allowed')
+    expect(getCall[1].headers.Authorization).toBe('Bearer jwt')
+  })
+
+  it('checkAllowed returns allowed=false when user is not authorized', async () => {
+    const mock = fetchMockFactory([
+      { status: 200, json: { ok: true, data: { token: 'jwt' } } },
+      { status: 200, json: { ok: true, data: { allowed: false } } }
+    ])
+    vi.stubGlobal('fetch', mock)
+
+    const result = await api.checkAllowed(email)
+    expect(result.allowed).toBe(false)
+  })
+
+  it('checkAllowed handles 401 as not allowed', async () => {
+    const mock = fetchMockFactory([
+      { status: 200, json: { ok: true, data: { token: 'jwt' } } },
+      { status: 401, json: { ok: false, msg: 'Unauthorized' } }
+    ])
+    vi.stubGlobal('fetch', mock)
+
+    const result = await api.checkAllowed(email)
+    expect(result.allowed).toBe(false)
+  })
 })
