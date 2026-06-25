@@ -73,7 +73,6 @@ export default function App() {
     }
 
     document.addEventListener('visibilitychange', onVisibilityChange)
-    loadEntriesRef.current()
 
     return () => {
       clearTimeout(timer)
