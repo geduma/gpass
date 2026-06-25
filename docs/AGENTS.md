@@ -270,7 +270,54 @@ El frontend (`gpass`) verifica si el usuario está autorizado inmediatamente des
 
 ---
 
-## 7. Notas
+## 7. Modo Demo
+
+El frontend incluye un modo demo que permite explorar la app sin conexión a MongoDB.
+
+### 7.1. Botón Demo
+
+En `LoginModal` se muestra un botón "Try Demo Mode" (borde punteado azul) debajo de los providers OAuth. Al hacer clic:
+
+1. `startDemo()` crea un usuario sintético:
+   ```js
+   { email: 'demo@demo.local', displayName: 'Demo User', ownerHash, demo: true }
+   ```
+2. Se guarda en `localStorage` con la misma clave que un usuario real (`gpass_user`)
+3. No se llama a ninguna API de autenticación — el login es instantáneo
+4. `App.jsx` detecta `user.demo === true` y salta la verificación `checkAllowed`
+5. Todos los componentes (EntryList, EntryDetail) funcionan exactamente igual
+
+### 7.2. Almacenamiento IndexedDB
+
+Base de datos `gpass-demo` con un store `entries`.
+
+**Seguridad**:
+- Passwords cifradas con AES-GCM-256 (mismo algoritmo que producción)
+- Nunca se almacenan passwords en texto plano
+- Owner fijo `sha256('demo@demo.local')` sin información de usuarios reales
+- No se generan JWT ni tokens de acceso
+- No se llama a ningún endpoint de la API real
+- Al hacer logout se limpia toda la base IndexedDB
+
+**Límites**:
+- Máximo 5 entries por sesión demo
+- Cada entry expira a los 15 minutos y se elimina automáticamente al leer
+- Si no hay entries (nuevo demo o todas expiradas), se crean 2 de ejemplo:
+  - `GitHub` / `demo@github.com` (strong)
+  - `Example Corp` / `demo@example.com` (weak)
+- Las entries de ejemplo se cifran antes de guardarse en IndexedDB
+
+**Archivos involucrados**:
+- `src/utils/demo-db.js` — CRUD IndexedDB, expiry, seed, max 5
+- `src/utils/api.js` — cada función detecta `isDemoMode()` y redirige a demo-db
+- `src/hooks/useAuth.js` — función `startDemo()`, flag `demo: true` en user
+- `src/App.jsx` — handler `handleDemoLogin`, logout limpia IndexedDB
+- `src/components/LoginModal.jsx` — botón "Try Demo Mode"
+- `src/index.css` — clase `.demo-btn`
+
+---
+
+## 8. Notas
 
 - Almacenamiento ciego: `password`, `encrypted` e `iv` se guardan y devuelven sin procesar.
 - Búsqueda textual sobre `title` y `username`.

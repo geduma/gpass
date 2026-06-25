@@ -21,6 +21,20 @@ export async function startLogin(appId, providerId) {
   window.location.href = json.data.redirect
 }
 
+export async function startDemo() {
+  const ownerHash = await sha256('demo@demo.local')
+  const userData = {
+    email: 'demo@demo.local',
+    displayName: 'Demo User',
+    picture: '',
+    provider: 'demo',
+    ownerHash,
+    demo: true
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
+  return userData
+}
+
 export function useAuth() {
   const [user, setUser] = useState(null)
 
@@ -60,5 +74,5 @@ export function useAuth() {
     localStorage.removeItem(STORAGE_KEY)
   }, [])
 
-  return { user, logout }
+  return { user, logout, setUser }
 }

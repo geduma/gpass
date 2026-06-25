@@ -1,8 +1,19 @@
 import { encryptField, decryptField } from './crypto'
+import * as demoDb from './demo-db'
 
 const AUTH_BASE = 'https://api.geduma.com/auth'
 const CRUD_BASE = 'https://api.geduma.com/gpass'
 const KEY = import.meta.env.VITE_API_AUTH_KEY
+
+function isDemoMode() {
+  try {
+    const stored = localStorage.getItem('gpass_user')
+    if (!stored) return false
+    return JSON.parse(stored).demo === true
+  } catch {
+    return false
+  }
+}
 
 async function getToken(email) {
   const res = await fetch(`${AUTH_BASE}`, {
@@ -39,6 +50,20 @@ async function decryptEntry(entry, email) {
 }
 
 export async function fetchEntries(owner, query, email) {
+  if (isDemoMode()) {
+    let entries = await demoDb.getAll(owner, query)
+    if (entries.length === 0) {
+      const samples = demoDb.getSampleTemplates()
+      for (const s of samples) {
+        const { ciphertext, iv } = await encryptField(s.password, email)
+        await demoDb.create({ ...s, password: ciphertext, encrypted: true, iv, owner })
+      }
+      entries = await demoDb.getAll(owner, query)
+    }
+    const decrypted = await Promise.all(entries.map(e => decryptEntry(e, email)))
+    return decrypted.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+  }
+
   const token = await getToken(email)
   const params = new URLSearchParams({ owner })
   if (query) params.set('q', query)
@@ -56,8 +81,28 @@ export async function fetchEntries(owner, query, email) {
 
 export async function createEntry({ title, username, password, strength, owner, tags }, email) {
   const { ciphertext, iv } = await encryptField(password, email)
-  const now = new Date().toISOString()
 
+  if (isDemoMode()) {
+    const entry = await demoDb.create({
+      title, username: username || '', password: ciphertext,
+      strength: strength || 'strong', encrypted: true, iv, owner, tags
+    })
+    return {
+      _id: entry._id,
+      title,
+      username: username || '',
+      password,
+      strength: strength || 'strong',
+      encrypted: "true",
+      iv,
+      owner,
+      tags: tags || [],
+      createdAt: entry.createdAt,
+      updatedAt: entry.updatedAt
+    }
+  }
+
+  const now = new Date().toISOString()
   const token = await getToken(email)
   const body = {
     title,
@@ -105,6 +150,11 @@ export async function updateEntry(id, fields, email) {
     body.iv = iv
   }
 
+  if (isDemoMode()) {
+    const updated = await demoDb.update(id, body)
+    return decryptEntry(updated, email)
+  }
+
   const token = await getToken(email)
   const res = await fetch(`${CRUD_BASE}/${id}`, {
     method: 'PUT',
@@ -121,6 +171,7 @@ export async function updateEntry(id, fields, email) {
 }
 
 export async function checkAllowed(email) {
+  if (isDemoMode()) return { allowed: true }
   const token = await getToken(email)
   const res = await fetch(`${CRUD_BASE}/allowed`, {
     headers: { Authorization: `Bearer ${token}` }
@@ -132,6 +183,10 @@ export async function checkAllowed(email) {
 }
 
 export async function deleteEntry(id, owner, email) {
+  if (isDemoMode()) {
+    await demoDb.remove(id)
+    return
+  }
   const token = await getToken(email)
   const res = await fetch(`${CRUD_BASE}/${id}?owner=${encodeURIComponent(owner)}`, {
     method: 'DELETE',

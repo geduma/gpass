@@ -274,6 +274,20 @@ input:read-only:focus {
   border-color: var(--accent);
 }
 
+.demo-btn {
+  border-style: dashed;
+  border-color: var(--brand);
+  color: var(--brand);
+  margin-top: 8px;
+  opacity: 0.85;
+}
+
+.demo-btn:hover {
+  opacity: 1;
+  border-color: var(--brand);
+  background: rgba(10, 132, 255, 0.08);
+}
+
 @media (min-width: 768px) {
   .login-modal {
     max-width: 360px;

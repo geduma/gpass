@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useAuth } from './hooks/useAuth'
+import { useAuth, startDemo } from './hooks/useAuth'
+import { clearAll as clearDemoDb } from './utils/demo-db'
 import { fetchEntries, createEntry, updateEntry, deleteEntry, checkAllowed } from './utils/api'
 import EntryList from './components/EntryList'
 import EntryDetail from './components/EntryDetail'
@@ -10,7 +11,7 @@ import Spinner from './components/Spinner'
 const IDLE_TIMEOUT = 5 * 60 * 1000
 
 export default function App() {
-  const { user, logout } = useAuth()
+  const { user, logout, setUser } = useAuth()
   const [entries, setEntries] = useState([])
   const [activeEntry, setActiveEntry] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -90,6 +91,10 @@ export default function App() {
   useEffect(() => {
     if (!user) {
       setAllowed(null)
+      return
+    }
+    if (user.demo) {
+      setAllowed(true)
       return
     }
     checkAllowed(user.email).then(res => {
@@ -188,11 +193,17 @@ export default function App() {
     setEntries([])
     setActiveEntry(null)
     setSearchQuery('')
+    if (user?.demo) clearDemoDb()
     logout()
   }
 
+  async function handleDemoLogin() {
+    const userData = await startDemo()
+    setUser(userData)
+  }
+
   if (!user) {
-    return <LoginModal restrictedMsg={restrictedMsg} />
+    return <LoginModal restrictedMsg={restrictedMsg} onDemoLogin={handleDemoLogin} />
   }
 
   if (allowed === null) {

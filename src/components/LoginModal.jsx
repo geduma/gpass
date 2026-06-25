@@ -3,7 +3,7 @@ import { fetchProviders, startLogin } from '../hooks/useAuth'
 
 const APP_ID = import.meta.env.VITE_APP_ID
 
-export default function LoginModal({ restrictedMsg }) {
+export default function LoginModal({ restrictedMsg, onDemoLogin }) {
   const [providers, setProviders] = useState([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -53,6 +53,9 @@ export default function LoginModal({ restrictedMsg }) {
               {p.displayName || p.name}
             </button>
           ))}
+          <button className="login-provider-btn demo-btn" onClick={onDemoLogin}>
+            Try Demo Mode
+          </button>
         </div>
       </div>
     </div>
