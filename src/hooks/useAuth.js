@@ -34,6 +34,8 @@ export async function startLogin(appId, providerId) {
 }
 
 export async function startDemo() {
+  const saltBytes = crypto.getRandomValues(new Uint8Array(16))
+  const salt = btoa(String.fromCharCode(...saltBytes))
   const ownerHash = await sha256('demo@demo.local')
   const userData = {
     email: 'demo@demo.local',
@@ -41,6 +43,7 @@ export async function startDemo() {
     picture: '',
     provider: 'demo',
     ownerHash,
+    salt,
     demo: true
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(userData))

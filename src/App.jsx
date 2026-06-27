@@ -29,7 +29,8 @@ export default function App() {
       const data = await fetchEntries(
         user.ownerHash,
         searchQuery,
-        user.email
+        user.email,
+        user.salt
       )
       setEntries(data)
     } catch (err) {
@@ -133,7 +134,7 @@ export default function App() {
         if (form.strength !== undefined) fields.strength = form.strength
         if (form.tags !== undefined) fields.tags = form.tags
         fields.owner = user.ownerHash
-        await updateEntry(form._id, fields, user.email)
+        await updateEntry(form._id, fields, user.email, user.salt)
       } else {
         await createEntry({
           title: form.title,
@@ -142,7 +143,7 @@ export default function App() {
           strength: form.strength || 'strong',
           owner: user.ownerHash,
           tags: form.tags || []
-        }, user.email)
+        }, user.email, user.salt)
       }
       setActiveEntry(null)
       setShowNewEntry(false)
