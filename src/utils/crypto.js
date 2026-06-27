@@ -1,4 +1,3 @@
-const SALT = 'gpass-cipher-v2'
 const ITERATIONS = 100000
 const KEY_LENGTH = 256
 const IV_LENGTH = 12
@@ -21,7 +20,7 @@ function arrayBufferToBase64(buffer) {
   return btoa(binary)
 }
 
-export async function deriveKey(email) {
+export async function deriveKey(email, salt) {
   const encoder = new TextEncoder()
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
@@ -33,7 +32,7 @@ export async function deriveKey(email) {
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: encoder.encode(SALT),
+      salt: base64ToBytes(salt),
       iterations: ITERATIONS,
       hash: 'SHA-256'
     },
@@ -47,8 +46,8 @@ export async function deriveKey(email) {
   )
 }
 
-export async function encryptField(plaintext, email) {
-  const key = await deriveKey(email)
+export async function encryptField(plaintext, email, salt) {
+  const key = await deriveKey(email, salt)
   const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH))
   const encoder = new TextEncoder()
   const ciphertext = await crypto.subtle.encrypt(
@@ -62,8 +61,8 @@ export async function encryptField(plaintext, email) {
   }
 }
 
-export async function decryptField({ ciphertext, iv }, email) {
-  const key = await deriveKey(email)
+export async function decryptField({ ciphertext, iv }, email, salt) {
+  const key = await deriveKey(email, salt)
   const decoder = new TextDecoder()
   const plaintext = await crypto.subtle.decrypt(
     { name: 'AES-GCM', iv: base64ToBytes(iv) },

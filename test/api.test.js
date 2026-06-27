@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
 
 let api
 const email = 'test@example.com'
+const salt = 'Z3Bhc3MtdGVzdC1zYWx0LTE2Yg=='
 const ownerHash = '2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c'
 const entryId = '665f1a2b3c4d5e6f7a8b9c0d'
 
@@ -41,7 +42,7 @@ describe('api', () => {
       password: 'secret123',
       strength: 'strong',
       owner: ownerHash
-    }, email)
+    }, email, salt)
 
     expect(result._id).toBe(entryId)
     expect(result.title).toBe('GitHub')
@@ -64,7 +65,7 @@ describe('api', () => {
     ])
     vi.stubGlobal('fetch', mock)
 
-    const result = await api.fetchEntries(ownerHash, 'test', email)
+    const result = await api.fetchEntries(ownerHash, 'test', email, salt)
 
     const getCall = mock.mock.calls[1]
     expect(getCall[0]).toContain('owner=')
@@ -80,7 +81,7 @@ describe('api', () => {
     ])
     vi.stubGlobal('fetch', mock)
 
-    const result = await api.fetchEntries(ownerHash, '', email)
+    const result = await api.fetchEntries(ownerHash, '', email, salt)
     expect(result).toEqual([])
   })
 
@@ -99,7 +100,7 @@ describe('api', () => {
     ])
     vi.stubGlobal('fetch', mock)
 
-    await api.updateEntry(entryId, { title: 'Updated', strength: 'strong' }, email)
+    await api.updateEntry(entryId, { title: 'Updated', strength: 'strong' }, email, salt)
 
     const putCall = mock.mock.calls[1]
     expect(putCall[0]).toBe(`https://api.geduma.com/gpass/${entryId}`)
@@ -121,40 +122,4 @@ describe('api', () => {
     expect(deleteCall[1].body).toBeUndefined()
   })
 
-  it('checkAllowed returns allowed=true when user is authorized', async () => {
-    const mock = fetchMockFactory([
-      { status: 200, json: { ok: true, data: { token: 'jwt' } } },
-      { status: 200, json: { ok: true, data: { allowed: true } } }
-    ])
-    vi.stubGlobal('fetch', mock)
-
-    const result = await api.checkAllowed(email)
-    expect(result.allowed).toBe(true)
-
-    const getCall = mock.mock.calls[1]
-    expect(getCall[0]).toBe('https://api.geduma.com/gpass/allowed')
-    expect(getCall[1].headers.Authorization).toBe('Bearer jwt')
-  })
-
-  it('checkAllowed returns allowed=false when user is not authorized', async () => {
-    const mock = fetchMockFactory([
-      { status: 200, json: { ok: true, data: { token: 'jwt' } } },
-      { status: 200, json: { ok: true, data: { allowed: false } } }
-    ])
-    vi.stubGlobal('fetch', mock)
-
-    const result = await api.checkAllowed(email)
-    expect(result.allowed).toBe(false)
-  })
-
-  it('checkAllowed handles 401 as not allowed', async () => {
-    const mock = fetchMockFactory([
-      { status: 200, json: { ok: true, data: { token: 'jwt' } } },
-      { status: 401, json: { ok: false, msg: 'Unauthorized' } }
-    ])
-    vi.stubGlobal('fetch', mock)
-
-    const result = await api.checkAllowed(email)
-    expect(result.allowed).toBe(false)
-  })
 })

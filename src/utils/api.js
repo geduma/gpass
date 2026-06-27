@@ -4,6 +4,18 @@ import * as demoDb from './demo-db'
 const AUTH_BASE = 'https://api.geduma.com/auth'
 const CRUD_BASE = 'https://api.geduma.com/gpass'
 const KEY = import.meta.env.VITE_API_AUTH_KEY
+const FETCH_TIMEOUT = 10000
+
+async function fetchWithTimeout(url, options = {}) {
+  const controller = new AbortController()
+  const id = setTimeout(() => controller.abort(), FETCH_TIMEOUT)
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal })
+    return res
+  } finally {
+    clearTimeout(id)
+  }
+}
 
 function isDemoMode() {
   try {
@@ -16,7 +28,7 @@ function isDemoMode() {
 }
 
 async function getToken(email) {
-  const res = await fetch(`${AUTH_BASE}`, {
+  const res = await fetchWithTimeout(`${AUTH_BASE}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name: 'gpass', user: email, key: KEY })
@@ -42,25 +54,25 @@ function normalizeEntry(entry, plainPassword) {
   }
 }
 
-async function decryptEntry(entry, email) {
+async function decryptEntry(entry, email, salt) {
   const plain = entry.encrypted
-    ? await decryptField({ ciphertext: entry.password, iv: entry.iv }, email)
+    ? await decryptField({ ciphertext: entry.password, iv: entry.iv }, email, salt)
     : entry.password
   return normalizeEntry(entry, plain)
 }
 
-export async function fetchEntries(owner, query, email) {
+export async function fetchEntries(owner, query, email, salt) {
   if (isDemoMode()) {
     let entries = await demoDb.getAll(owner, query)
     if (entries.length === 0) {
       const samples = demoDb.getSampleTemplates()
       for (const s of samples) {
-        const { ciphertext, iv } = await encryptField(s.password, email)
+        const { ciphertext, iv } = await encryptField(s.password, email, salt)
         await demoDb.create({ ...s, password: ciphertext, encrypted: true, iv, owner })
       }
       entries = await demoDb.getAll(owner, query)
     }
-    const decrypted = await Promise.all(entries.map(e => decryptEntry(e, email)))
+    const decrypted = await Promise.all(entries.map(e => decryptEntry(e, email, salt)))
     return decrypted.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
   }
 
@@ -68,19 +80,19 @@ export async function fetchEntries(owner, query, email) {
   const params = new URLSearchParams({ owner })
   if (query) params.set('q', query)
 
-  const res = await fetch(`${CRUD_BASE}?${params}`, {
+  const res = await fetchWithTimeout(`${CRUD_BASE}?${params}`, {
     headers: { Authorization: `Bearer ${token}` }
   })
   if (res.status === 204) return []
   const json = await res.json()
   if (!json.ok) throw new Error(json.msg || 'Failed to fetch entries')
 
-  const decrypted = await Promise.all(json.data.map(e => decryptEntry(e, email)))
+  const decrypted = await Promise.all(json.data.map(e => decryptEntry(e, email, salt)))
   return decrypted.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
 }
 
-export async function createEntry({ title, username, password, strength, owner, tags }, email) {
-  const { ciphertext, iv } = await encryptField(password, email)
+export async function createEntry({ title, username, password, strength, owner, tags }, email, salt) {
+  const { ciphertext, iv } = await encryptField(password, email, salt)
 
   if (isDemoMode()) {
     const entry = await demoDb.create({
@@ -114,7 +126,7 @@ export async function createEntry({ title, username, password, strength, owner, 
     owner,
     ...(tags && { tags })
   }
-  const res = await fetch(`${CRUD_BASE}`, {
+  const res = await fetchWithTimeout(`${CRUD_BASE}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -140,11 +152,11 @@ export async function createEntry({ title, username, password, strength, owner, 
   }
 }
 
-export async function updateEntry(id, fields, email) {
+export async function updateEntry(id, fields, email, salt) {
   const body = { ...fields }
 
   if (body.password) {
-    const { ciphertext, iv } = await encryptField(body.password, email)
+    const { ciphertext, iv } = await encryptField(body.password, email, salt)
     body.password = ciphertext
     body.encrypted = "true"
     body.iv = iv
@@ -152,11 +164,11 @@ export async function updateEntry(id, fields, email) {
 
   if (isDemoMode()) {
     const updated = await demoDb.update(id, body)
-    return decryptEntry(updated, email)
+    return decryptEntry(updated, email, salt)
   }
 
   const token = await getToken(email)
-  const res = await fetch(`${CRUD_BASE}/${id}`, {
+  const res = await fetchWithTimeout(`${CRUD_BASE}/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -167,19 +179,7 @@ export async function updateEntry(id, fields, email) {
   const json = await res.json()
   if (!json.ok) throw new Error(json.msg || 'Failed to update entry')
 
-  return decryptEntry(json.data, email)
-}
-
-export async function checkAllowed(email) {
-  if (isDemoMode()) return { allowed: true }
-  const token = await getToken(email)
-  const res = await fetch(`${CRUD_BASE}/allowed`, {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-  if (res.status === 401) return { allowed: false }
-  const json = await res.json()
-  if (!json.ok) throw new Error(json.msg || 'Failed to check access')
-  return { allowed: json.data.allowed }
+  return decryptEntry(json.data, email, salt)
 }
 
 export async function deleteEntry(id, owner, email) {
@@ -188,7 +188,7 @@ export async function deleteEntry(id, owner, email) {
     return
   }
   const token = await getToken(email)
-  const res = await fetch(`${CRUD_BASE}/${id}?owner=${encodeURIComponent(owner)}`, {
+  const res = await fetchWithTimeout(`${CRUD_BASE}/${id}?owner=${encodeURIComponent(owner)}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`
