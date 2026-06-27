@@ -4,6 +4,18 @@ import * as demoDb from './demo-db'
 const AUTH_BASE = 'https://api.geduma.com/auth'
 const CRUD_BASE = 'https://api.geduma.com/gpass'
 const KEY = import.meta.env.VITE_API_AUTH_KEY
+const FETCH_TIMEOUT = 10000
+
+async function fetchWithTimeout(url, options = {}) {
+  const controller = new AbortController()
+  const id = setTimeout(() => controller.abort(), FETCH_TIMEOUT)
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal })
+    return res
+  } finally {
+    clearTimeout(id)
+  }
+}
 
 function isDemoMode() {
   try {
@@ -16,7 +28,7 @@ function isDemoMode() {
 }
 
 async function getToken(email) {
-  const res = await fetch(`${AUTH_BASE}`, {
+  const res = await fetchWithTimeout(`${AUTH_BASE}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name: 'gpass', user: email, key: KEY })
@@ -68,7 +80,7 @@ export async function fetchEntries(owner, query, email) {
   const params = new URLSearchParams({ owner })
   if (query) params.set('q', query)
 
-  const res = await fetch(`${CRUD_BASE}?${params}`, {
+  const res = await fetchWithTimeout(`${CRUD_BASE}?${params}`, {
     headers: { Authorization: `Bearer ${token}` }
   })
   if (res.status === 204) return []
@@ -114,7 +126,7 @@ export async function createEntry({ title, username, password, strength, owner, 
     owner,
     ...(tags && { tags })
   }
-  const res = await fetch(`${CRUD_BASE}`, {
+  const res = await fetchWithTimeout(`${CRUD_BASE}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -156,7 +168,7 @@ export async function updateEntry(id, fields, email) {
   }
 
   const token = await getToken(email)
-  const res = await fetch(`${CRUD_BASE}/${id}`, {
+  const res = await fetchWithTimeout(`${CRUD_BASE}/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -176,7 +188,7 @@ export async function deleteEntry(id, owner, email) {
     return
   }
   const token = await getToken(email)
-  const res = await fetch(`${CRUD_BASE}/${id}?owner=${encodeURIComponent(owner)}`, {
+  const res = await fetchWithTimeout(`${CRUD_BASE}/${id}?owner=${encodeURIComponent(owner)}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`

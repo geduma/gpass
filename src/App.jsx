@@ -11,7 +11,7 @@ import Spinner from './components/Spinner'
 const IDLE_TIMEOUT = 5 * 60 * 1000
 
 export default function App() {
-  const { user, logout, setUser } = useAuth()
+  const { user, loading: authLoading, logout, setUser } = useAuth()
   const [entries, setEntries] = useState([])
   const [activeEntry, setActiveEntry] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -186,6 +186,7 @@ export default function App() {
     setUser(userData)
   }
 
+  if (authLoading) return <Spinner />
   if (!user) {
     return <LoginModal restrictedMsg={restrictedMsg} onDemoLogin={handleDemoLogin} />
   }
