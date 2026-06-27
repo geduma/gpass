@@ -55,7 +55,12 @@ async function restoreSession() {
   if (!stored) return null
 
   try {
-    return JSON.parse(stored)
+    const data = JSON.parse(stored)
+    if (!data.demo && !data.salt) {
+      localStorage.removeItem(STORAGE_KEY)
+      return null
+    }
+    return data
   } catch {
     localStorage.removeItem(STORAGE_KEY)
     return null
