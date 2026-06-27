@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth, startDemo } from './hooks/useAuth'
 import { clearAll as clearDemoDb } from './utils/demo-db'
-import { fetchEntries, createEntry, updateEntry, deleteEntry, checkAllowed } from './utils/api'
+import { fetchEntries, createEntry, updateEntry, deleteEntry } from './utils/api'
 import EntryList from './components/EntryList'
 import EntryDetail from './components/EntryDetail'
 import LoginModal from './components/LoginModal'
@@ -18,7 +18,6 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [showNewEntry, setShowNewEntry] = useState(false)
-  const [allowed, setAllowed] = useState(null)
   const [restrictedMsg, setRestrictedMsg] = useState(null)
   const lastActivityRef = useRef(Date.now())
   const loadEntriesRef = useRef(null)
@@ -88,27 +87,13 @@ export default function App() {
   }, [loadEntries])
 
   useEffect(() => {
-    if (!user) {
-      setAllowed(null)
-      return
-    }
-    if (user.demo) {
-      setAllowed(true)
-      return
-    }
-    checkAllowed(user.email).then(res => {
-      if (!res.allowed) {
-        setRestrictedMsg('You do not have access to gpass.')
-        logout()
-        setTimeout(() => setRestrictedMsg(null), 4000)
-        return
-      }
-      setAllowed(true)
-    }).catch(() => {
+    if (!user) return
+    if (user.demo) return
+    if (user.allowed !== true) {
       setRestrictedMsg('You do not have access to gpass.')
       logout()
       setTimeout(() => setRestrictedMsg(null), 4000)
-    })
+    }
   }, [user])
 
   function handleSearchChange(query) {
@@ -203,10 +188,6 @@ export default function App() {
 
   if (!user) {
     return <LoginModal restrictedMsg={restrictedMsg} onDemoLogin={handleDemoLogin} />
-  }
-
-  if (allowed === null) {
-    return <Spinner />
   }
 
   const showDetail = activeEntry !== null || showNewEntry
