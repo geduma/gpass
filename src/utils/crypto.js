@@ -2,6 +2,14 @@ const ITERATIONS = 100000
 const KEY_LENGTH = 256
 const IV_LENGTH = 12
 
+function parseHex(str) {
+  const bytes = new Uint8Array(str.length / 2)
+  for (let i = 0; i < str.length; i += 2) {
+    bytes[i / 2] = parseInt(str.substring(i, i + 2), 16)
+  }
+  return bytes
+}
+
 function base64ToBytes(base64) {
   const binary = atob(base64)
   const bytes = new Uint8Array(binary.length)
@@ -9,6 +17,14 @@ function base64ToBytes(base64) {
     bytes[i] = binary.charCodeAt(i)
   }
   return bytes
+}
+
+function saltToBytes(salt) {
+  try {
+    return base64ToBytes(salt)
+  } catch {
+    return parseHex(salt)
+  }
 }
 
 function arrayBufferToBase64(buffer) {
@@ -32,7 +48,7 @@ export async function deriveKey(email, salt) {
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: base64ToBytes(salt),
+      salt: saltToBytes(salt),
       iterations: ITERATIONS,
       hash: 'SHA-256'
     },

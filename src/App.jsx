@@ -19,6 +19,16 @@ export default function App() {
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [showNewEntry, setShowNewEntry] = useState(false)
   const [restrictedMsg, setRestrictedMsg] = useState(null)
+  const [saveError, setSaveError] = useState(null)
+  const saveErrorTimerRef = useRef(null)
+
+  useEffect(() => {
+    if (saveError) {
+      clearTimeout(saveErrorTimerRef.current)
+      saveErrorTimerRef.current = setTimeout(() => setSaveError(null), 4000)
+    }
+    return () => clearTimeout(saveErrorTimerRef.current)
+  }, [saveError])
   const lastActivityRef = useRef(Date.now())
   const loadEntriesRef = useRef(null)
 
@@ -124,6 +134,11 @@ export default function App() {
 
   async function handleSave(form) {
     if (!user) return
+    if (!user.salt) {
+      setSaveError('Missing encryption salt. Try logging out and back in.')
+      return
+    }
+    setSaveError(null)
     setLoading(true)
     try {
       if (form._id) {
@@ -149,7 +164,8 @@ export default function App() {
       setShowNewEntry(false)
       await loadEntries()
     } catch (err) {
-      if (import.meta.env.DEV) console.error('Failed to save entry:', err)
+      console.error('Failed to save entry:', err)
+      setSaveError(err.message || 'Failed to save entry')
     } finally {
       setLoading(false)
     }
@@ -209,6 +225,11 @@ export default function App() {
         onNewEntry={handleNewEntry}
       />
 
+      {saveError && (
+        <div className="toast toast-error" onClick={() => setSaveError(null)}>
+          {saveError}
+        </div>
+      )}
       {showDetail && (
         <EntryDetail
           entry={activeEntry}
